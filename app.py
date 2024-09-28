@@ -664,7 +664,6 @@ def will_bullet_hit(new_x, new_y, bullets, max_y, max_x):
 from flask import Flask, request, jsonify
 from collections import defaultdict
 from difflib import get_close_matches
-import numpy as np
 import requests  # For handling external requests, if needed
 from requests.exceptions import Timeout, RequestException  # Import exceptions for timeout handling
 
