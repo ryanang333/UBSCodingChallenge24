@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import pandas as pd
 import numpy as np
+import re
 import string
 from collections import Counter, defaultdict
 
@@ -57,6 +58,7 @@ word_list =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abat
 arr_words_5l = np.array([list(w) for w in word_list])
 df_words_5l = pd.DataFrame(data=arr_words_5l,
                            columns=[f'letter_{i+1}' for i in range(5)])
+
 df_words_5l['word'] = word_list
 class Game:
     
@@ -190,10 +192,11 @@ class Game:
         was correct (2), misplaced (1), or incorrect(0) at each corresponding position
         '''
         
+
         guess = re.sub(r'[^A-Z]', '', guess.upper())
         assert len(guess) == 5, 'Guess must be 5 characters long'
         assert len(results) == 5, 'Results list must contain 5 items'
-        assert all([n in [0,1,2] for n in results]), 'Results list must only contain ints 0, 1, or 2'
+        assert all([n in [-1,0,1,2] for n in results]), 'Results list must only contain ints 0, 1, or 2'
         
         # Convert guess into list of letters
         list_guess = list(guess.upper())
@@ -225,6 +228,11 @@ class Game:
                         
                     # And filter dataframe of possible words
                     self.df_possible_5l_words = self.df_possible_5l_words.query(f'letter_{idx}=="{corr_letter}"')
+
+                    if self.df_possible_5l_words.empty:
+                        print("Filtered DataFrame is empty after removing correct letters.")
+                        return
+
 
           
         # Add misplaced letters to our list, if it's a new letter
@@ -265,7 +273,9 @@ class Game:
         # for letters yet to be guessed, they don't fall in the list of possible letters
         yet_to_solve = [key for key, value in self.dict_letters.items() if value is None]
         for position in yet_to_solve:
-            
+            print(f"Available columns: {self.df_possible_5l_words.columns}")
+            print(f"Updating position: {position}")
+
             # Check all letters in a given position
             position_letters = self.df_possible_5l_words[f'letter_{position}']
             
@@ -287,6 +297,8 @@ def evaluate_possible_words(guess_history, evaluation_history, words_df, game: G
                 results.append(1)  # correct letter, wrong place
             elif result == '-':
                 results.append(0)  # incorrect letter
+            elif result == '?':
+                results.append(-1) 
         # Update the Game state with the guess and evaluation results
         game.update(guess, results)
     
@@ -301,7 +313,8 @@ def wordle_game():
         data = request.get_json()
         
         # Initialize the Game object with the full word list DataFrame
-        game = Game(df_all_5l_words)
+        game = Game(df_words_5l)
+        print(game.df_possible_5l_words.head())
         
         if len(data['guessHistory']) == 0:
             # First guess
@@ -309,7 +322,7 @@ def wordle_game():
         else:
             guess_history = data['guessHistory']
             evaluation_history = data['evaluationHistory']
-            possible_words = evaluate_possible_words(guess_history, evaluation_history, df_all_5l_words, game)
+            possible_words = evaluate_possible_words(guess_history, evaluation_history, df_words_5l, game)
             
             if len(possible_words) == 0:
                 guess = "error"
