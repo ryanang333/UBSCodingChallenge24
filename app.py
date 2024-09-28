@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import Flask, request, jsonify
-from datetime import datetime
+from datetime import datetime,timedelta
 import requests, re
 app = Flask(__name__)
 
@@ -817,7 +817,6 @@ def efficient_hunter_kazuma():
 def average_response_time():
     data = request.get_json()
 
-    # Prepare dictionaries to store response times and counts
     response_times = {user['name']: [] for user in data['users']}
     last_sent_time = {}
 
@@ -825,24 +824,32 @@ def average_response_time():
     for email in data['emails']:
         sender = email['sender']
         receiver = email['receiver']
+        subject = email['subject']
         time_sent = datetime.fromisoformat(email['timeSent'])
+        # Check if the time zone offset is +01:00
+        if time_sent.utcoffset() == timedelta(hours=1):
+            # Add one hour to account for daylight savings
+            time_sent -= timedelta(hours=1)
+        # Check if the email is a reply (subject starts with "RE:")
+        if subject.startswith("RE:"):
+            original_subject = subject[4:]  # Remove "RE: " prefix
+            if (receiver, original_subject) in last_sent_time:
+                # Calculate response time
+                print(sender)
+                print('this is time sent',time_sent)
+                print('this is time received',last_sent_time[(receiver, original_subject)])
+                response_time = (time_sent - last_sent_time[(receiver, original_subject)]).total_seconds()
+                response_times[sender].append(response_time)
         
-        if receiver in last_sent_time:
-            # Calculate response time
-            response_time = (time_sent - last_sent_time[receiver]).total_seconds()
-            response_times[receiver].append(response_time)
-
-        # Update the last sent time for the sender
-        last_sent_time[sender] = time_sent
+        # Update the last sent time for the subject and sender
+        last_sent_time[(sender, subject)] = time_sent
 
     # Calculate average response times
     average_response_times = {
         user: int(sum(times) / len(times)) if times else 0
         for user, times in response_times.items()
     }
-
     return jsonify(average_response_times)
-
 # Store variables in a dictionary
 variables = {}
 
