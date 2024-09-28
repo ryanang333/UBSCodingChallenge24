@@ -45,7 +45,7 @@ def digital_colony():
         weight_after_generations = simulate_generations(colony, generations)
         results.append(str(weight_after_generations))
     
-    return jsonify(results)
+    return jsonify(results), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
