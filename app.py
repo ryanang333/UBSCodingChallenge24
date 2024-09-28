@@ -3,6 +3,30 @@ from flask import Flask, request, jsonify
 import requests, re
 app = Flask(__name__)
 
+@app.route('/ub5-flags')
+def get_ctfed():
+    response = {
+        "sanityScroll": {
+            "flag": "UB5{b'w3lc0m3_70_c7f_N0ttyB01'}"
+        },
+        "openAiExploration": {
+            "flag": "FLAG_CONTENT_HERE"
+        },
+        "dictionaryAttack": {
+            "flag": "UB5{FLAG_CONTENT_HERE}",
+            "password": "PASSWORD_HERE"
+        },
+        "pictureSteganography": {
+            "flagOne": "UB5-1{FLAG_ONE_CONTENTS_HERE}",
+            "flagTwo": "UB5-2{FLAG_TWO_CONTENTS_HERE}"
+        },
+        "reverseEngineeringTheDeal": {
+            "flag": "FLAG_CONTENT_HERE",
+            "key": "KEY_HERE"
+        }
+    }
+    return jsonify(response), 200
+
 @app.route('/coolcodehack', methods=['POST'])
 def get_hacked():
     response = {
@@ -751,42 +775,46 @@ def the_clumsy_programmer():
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
 
-
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
-    data = request.json
-    results = []        
-    for hunt in data:
-        monsters = hunt["monsters"]
-        n = len(monsters)
-        efficiency = 0
-        i = 0
-        if n == 1:
-            results.append({"efficiency": 0})
-            continue
-        while i < n:
-            # Skip cooldown time if the next monster is stronger
-            if i < n - 1 and monsters[i + 1] > monsters[i]:
-                i += 1
+    try:
+        data = request.json
+        results = []
+
+        for hunt in data:
+            monsters = hunt["monsters"]
+            n = len(monsters)
+
+            if n == 1:
+                results.append({"efficiency": 0})
                 continue
-            
-            # Check if there are monsters to attack
-            if monsters[i] > 0:
-                # Calculate fee and attack if conditions are met
-                fee = monsters[i - 1] if i > 0 else 0
-                attack = monsters[i]
 
-                if i + 1 < n and attack > monsters[i + 1]:
-                    efficiency += max(0, attack - fee)
-                    i += 2  # Skip cooldown time after attack
+            efficiency = 0
+            fee = 0  # This will track the total fees paid to adventurers
+            i = 0
+
+            while i < n:
+                if monsters[i] > 0:  # Only consider attacking if there are monsters
+                    # Calculate potential earnings
+                    current_earning = monsters[i] - fee
+                    if current_earning > 0:
+                        efficiency += current_earning  # Add to efficiency
+                    fee = monsters[i]  # Set fee to current monster count
+
+                    # If next monster count is less than or equal, we should skip cooldown
+                    if i + 1 < n and monsters[i + 1] <= monsters[i]:
+                        i += 1  # Move to next time frame directly
+                    else:
+                        i += 2  # Move to next time frame after cooldown
                 else:
-                    efficiency += max(0, attack - fee)  # Attack even if not skipping
-                    i += 1  # Move to next time frame
-            else:
-                i += 1  # Move to next time frame if no monsters
+                    i += 1  # Move to next time frame if no monsters
 
-        results.append({"efficiency": efficiency})
+            results.append({"efficiency": efficiency})
+
+        return jsonify(results)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
     
-    return jsonify(results)
 if __name__ == '__main__':
     app.run(debug=True)
