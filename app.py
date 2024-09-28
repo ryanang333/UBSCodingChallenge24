@@ -843,175 +843,162 @@ def average_response_time():
 
     return jsonify(average_response_times)
 
-# Define the functions for the interpreter
+# Store variables in a dictionary
 variables = {}
 
-def puts(arg):
-    if isinstance(arg, str):
-        return arg
-    raise ValueError("ERROR at line {line_number}")
+def evaluate(expression):
+    """Evaluate a single expression."""
+    if isinstance(expression, str):
+        # If it's a string, it could be a variable
+        return variables.get(expression, expression)
+
+    if not isinstance(expression, list):
+        return expression
+
+    # The first element is the function name
+    func_name = expression[0]
+    args = expression[1:]
+
+    # Evaluate arguments
+    evaluated_args = [evaluate(arg) for arg in args]
+
+    # Call the corresponding function
+    if func_name == 'puts':
+        return puts(*evaluated_args)
+    elif func_name == 'set':
+        return set_variable(*evaluated_args)
+    elif func_name == 'concat':
+        return concat(*evaluated_args)
+    elif func_name == 'lowercase':
+        return lowercase(*evaluated_args)
+    elif func_name == 'uppercase':
+        return uppercase(*evaluated_args)
+    elif func_name == 'replace':
+        return replace(*evaluated_args)
+    elif func_name == 'substring':
+        return substring(*evaluated_args)
+    elif func_name == 'add':
+        return add(*evaluated_args)
+    elif func_name == 'subtract':
+        return subtract(*evaluated_args)
+    elif func_name == 'multiply':
+        return multiply(*evaluated_args)
+    elif func_name == 'divide':
+        return divide(*evaluated_args)
+    elif func_name == 'abs':
+        return abs_func(*evaluated_args)
+    elif func_name == 'max':
+        return max_func(*evaluated_args)
+    elif func_name == 'min':
+        return min_func(*evaluated_args)
+    elif func_name == 'gt':
+        return gt(*evaluated_args)
+    elif func_name == 'lt':
+        return lt(*evaluated_args)
+    elif func_name == 'equal':
+        return equal(*evaluated_args)
+    elif func_name == 'not_equal':
+        return not_equal(*evaluated_args)
+    elif func_name == 'str':
+        return str_func(*evaluated_args)
+
+    raise ValueError(f"Unknown function: {func_name}")
+
+def puts(*args):
+    """Prints the string representation of the argument."""
+    return ' '.join(str(arg) for arg in args)
 
 def set_variable(var_name, value):
+    """Sets a variable to a given value."""
     if var_name in variables:
-        raise ValueError("ERROR at line {line_number}")
+        raise ValueError("Variable already exists.")
     variables[var_name] = value
 
 def concat(arg1, arg2):
-    if isinstance(arg1, str) and isinstance(arg2, str):
-        return arg1 + arg2
-    raise ValueError("ERROR at line {line_number}")
+    """Concatenates two strings."""
+    return arg1 + arg2
 
 def lowercase(arg):
-    if isinstance(arg, str):
-        return arg.lower()
-    raise ValueError("ERROR at line {line_number}")
+    """Converts a string to lowercase."""
+    return arg.lower()
 
 def uppercase(arg):
-    if isinstance(arg, str):
-        return arg.upper()
-    raise ValueError("ERROR at line {line_number}")
+    """Converts a string to uppercase."""
+    return arg.upper()
 
 def replace(source, target, replacement):
-    if isinstance(source, str) and isinstance(target, str) and isinstance(replacement, str):
-        return source.replace(target, replacement)
-    raise ValueError("ERROR at line {line_number}")
+    """Replaces occurrences of target in source with replacement."""
+    return source.replace(target, replacement)
 
 def substring(source, start, end):
-    if isinstance(source, str) and isinstance(start, int) and isinstance(end, int):
-        if start < 0 or end > len(source) or start >= end:
-            raise ValueError("ERROR at line {line_number}")
-        return source[start:end]
-    raise ValueError("ERROR at line {line_number}")
+    """Returns a substring from source from start to end indices."""
+    return source[start:end]
 
 def add(*args):
-    if all(isinstance(arg, (int, float)) for arg in args):
-        return round(sum(args), 4)
-    raise ValueError("ERROR at line {line_number}")
+    """Adds numerical arguments."""
+    return sum(args)
 
 def subtract(arg1, arg2):
-    if isinstance(arg1, (int, float)) and isinstance(arg2, (int, float)):
-        return round(arg1 - arg2, 4)
-    raise ValueError("ERROR at line {line_number}")
+    """Subtracts arg2 from arg1."""
+    return arg1 - arg2
 
 def multiply(*args):
-    if all(isinstance(arg, (int, float)) for arg in args):
-        product = 1
-        for arg in args:
-            product *= arg
-        return round(product, 4)
-    raise ValueError("ERROR at line {line_number}")
+    """Multiplies numerical arguments."""
+    result = 1
+    for arg in args:
+        result *= arg
+    return result
 
 def divide(arg1, arg2):
-    if isinstance(arg1, (int, float)) and isinstance(arg2, (int, float)):
-        if arg2 == 0:
-            raise ValueError("ERROR at line {line_number}")
-        if isinstance(arg1, int) and isinstance(arg2, int):
-            return arg1 // arg2
-        return round(arg1 / arg2, 4)
-    raise ValueError("ERROR at line {line_number}")
+    """Divides arg1 by arg2."""
+    if arg2 == 0:
+        raise ValueError("Division by zero.")
+    return arg1 / arg2
 
 def abs_func(arg):
-    if isinstance(arg, (int, float)):
-        return abs(arg)
-    raise ValueError("ERROR at line {line_number}")
+    """Returns the absolute value of arg."""
+    return abs(arg)
 
 def max_func(*args):
-    if len(args) < 2 or not all(isinstance(arg, (int, float)) for arg in args):
-        raise ValueError("ERROR at line {line_number}")
+    """Returns the maximum of the arguments."""
     return max(args)
 
 def min_func(*args):
-    if len(args) < 2 or not all(isinstance(arg, (int, float)) for arg in args):
-        raise ValueError("ERROR at line {line_number}")
+    """Returns the minimum of the arguments."""
     return min(args)
 
 def gt(arg1, arg2):
-    if isinstance(arg1, (int, float)) and isinstance(arg2, (int, float)):
-        return arg1 > arg2
-    raise ValueError("ERROR at line {line_number}")
+    """Checks if arg1 is greater than arg2."""
+    return arg1 > arg2
 
 def lt(arg1, arg2):
-    if isinstance(arg1, (int, float)) and isinstance(arg2, (int, float)):
-        return arg1 < arg2
-    raise ValueError("ERROR at line {line_number}")
+    """Checks if arg1 is less than arg2."""
+    return arg1 < arg2
 
 def equal(arg1, arg2):
+    """Checks if two arguments are equal."""
     return arg1 == arg2
 
 def not_equal(arg1, arg2):
+    """Checks if two arguments are not equal."""
     return arg1 != arg2
 
 def str_func(arg):
+    """Converts arg to a string."""
     return str(arg)
-
-# Map function names to their implementations
-function_map = {
-    'puts': puts,
-    'set': set_variable,
-    'concat': concat,
-    'lowercase': lowercase,
-    'uppercase': uppercase,
-    'replace': replace,
-    'substring': substring,
-    'add': add,
-    'subtract': subtract,
-    'multiply': multiply,
-    'divide': divide,
-    'abs': abs_func,
-    'max': max_func,
-    'min': min_func,
-    'gt': gt,
-    'lt': lt,
-    'equal': equal,
-    'not_equal': not_equal,
-    'str': str_func
-}
-
-def interpret_line(line):
-    # Remove parentheses and split by spaces
-    line = line.strip()[1:-1].split()
-    func_name = line[0]
-    args = line[1:]
-
-    # Prepare arguments for the function
-    prepared_args = []
-    for arg in args:
-        # Check if the argument is a variable
-        if arg in variables:
-            prepared_args.append(variables[arg])
-        # Check if it's a number
-        elif arg.replace('.', '', 1).isdigit() or (arg[0] == '-' and arg[1:].replace('.', '', 1).isdigit()):
-            prepared_args.append(float(arg) if '.' in arg else int(arg))
-        # Check if it's a boolean
-        elif arg in ["true", "false"]:
-            prepared_args.append(arg == "true")
-        # Check if it's null
-        elif arg == "null":
-            prepared_args.append(None)
-        # Otherwise, it's a string
-        else:
-            prepared_args.append(arg[1:-1])  # Remove quotes
-
-    # Call the function and handle output
-    try:
-        result = function_map[func_name](*prepared_args)
-        if func_name == 'puts':
-            return result  # Only return for puts
-    except Exception as e:
-        return str(e)
 
 @app.route('/lisp-parser', methods=['POST'])
 def lisp_parser():
+    """API endpoint for parsing Lisp-like expressions."""
     expressions = request.json.get('expressions', [])
     output = []
 
     for line_number, expression in enumerate(expressions, start=1):
         try:
-            result = interpret_line(expression)
-            if result is not None:
-                output.append(result)
-        except ValueError as e:
-            output.append(f"ERROR at line {line_number}")
+            result = evaluate(expression)
+            output.append(result)
+        except Exception as e:
+            output.append(f"ERROR at line {line_number}: {str(e)}")
 
     return jsonify({"output": output})
 
