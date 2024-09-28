@@ -849,10 +849,8 @@ def calculate_efficiency(monsters):
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def eval_kazuma():
     data = request.get_json()
-    logging.info("data sent for evaluation {}".format(data))
     res = []
     for item in data:
-        logger.info("item sent for evaluation {}".format(item))
         monsters = item.get("monsters")
         result = kazuma(monsters)
         res.append(result)
