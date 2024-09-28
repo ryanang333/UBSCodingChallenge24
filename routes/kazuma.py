@@ -16,21 +16,21 @@ def efficient_hunter_kazuma():
                 results.append({"efficiency": 0})
                 continue
             
-            # Initialize DP array
-            dp = [0] * n
-            
-            # Base cases
-            dp[0] = max(0, monsters[0])  # If he attacks the first time
-            if n > 1:
-                # Calculate the second time frame
-                dp[1] = max(dp[0], monsters[1] - monsters[0])  # He can attack or skip
+            # Initialize the DP variables
+            efficiency = 0  # Represents the efficiency at the current time
+            previous_efficiency = 0  # Represents the efficiency at the previous time
 
-            # Fill the DP array
-            for i in range(2, n):
-                # Choose to attack or skip
-                dp[i] = max(dp[i - 1],  monsters[i] - monsters[i - 1] + dp[i - 2])
+            for i in range(n):
+                # Calculate the attack value
+                attack = max(0, monsters[i] - (monsters[i - 1] if i > 0 else 0))
 
-            results.append({"efficiency": dp[-1]})
+                # Calculate current efficiency considering whether to attack or not
+                current_efficiency = max(previous_efficiency, efficiency + attack)
+
+                # Update previous efficiency for the next iteration
+                efficiency = current_efficiency
+
+            results.append({"efficiency": efficiency})
 
         return jsonify(results)
 
