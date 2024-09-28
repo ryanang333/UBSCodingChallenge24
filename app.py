@@ -776,7 +776,6 @@ def the_clumsy_programmer():
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
 
-
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
     try:
@@ -787,34 +786,34 @@ def efficient_hunter_kazuma():
             monsters = hunt["monsters"]
             n = len(monsters)
 
+            # Edge case for no monsters
             if n == 0:
                 results.append({"efficiency": 0})
                 continue
-            elif n == 1:
-                results.append({"efficiency": 0})
-                continue
 
-            # Initialize the previous two states for DP
-            prev2 = 0  # Equivalent to dp[i-2]
-            prev1 = max(0, monsters[0])  # Equivalent to dp[i-1] (only attack first monster)
-
-            for i in range(1, n):
-                attack = max(0, monsters[i] - monsters[i - 1])  # Calculate attack value
+            # Initialize efficiencies
+            previous_efficiency = 0  # Efficiency up to the previous monster
+            current_efficiency = 0   # Efficiency up to the current monster
+            
+            for i in range(n):
+                # Calculate the potential attack earnings
+                attack_earning = monsters[i] - 1 if monsters[i] > 0 else 0
                 
-                # Current efficiency is the max of skipping the current monster or attacking it
-                current = max(prev1, prev2 + attack)
+                # Determine the new current efficiency
+                # 1. Either we don't attack and carry forward the previous efficiency
+                # 2. Or we attack, which means we add current earnings to previous efficiency
+                new_efficiency = max(current_efficiency, previous_efficiency + attack_earning)
+                
+                # Update previous and current efficiencies for the next iteration
+                previous_efficiency = current_efficiency
+                current_efficiency = new_efficiency
 
-                # Update previous states for next iteration
-                prev2 = prev1
-                prev1 = current
-
-            results.append({"efficiency": prev1})  # The last computed efficiency
+            results.append({"efficiency": current_efficiency})
 
         return jsonify(results)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
     
 
     
