@@ -1,68 +1,51 @@
 from flask import Flask, request, jsonify
+import json
 
 app = Flask(__name__)
 
-# Calculate signature of a pair of digits
-def calculate_signature(x, y):
-    if x == y:
-        return 0
-    elif x > y:
-        return x - y
-    else:
-        return 10 - (y - x)
-
-# Generate the next generation of the colony
-def generate_new_colony(colony):
+def calculate_weight_and_new_colony(colony):
+    # Calculate the weight of the colony
     weight = sum(int(digit) for digit in colony)
+    
+    # Calculate new colony digits based on the signatures
     new_colony = []
-    
-    # Add the first digit
-    new_colony.append(colony[0])
-    
-    # For each pair of digits, calculate the new digit and grow the colony
     for i in range(len(colony) - 1):
-        x = int(colony[i])
-        y = int(colony[i + 1])
-        signature = calculate_signature(x, y)
+        a = int(colony[i])
+        b = int(colony[i + 1])
         
-        # New digit is the last digit of (weight + signature)
+        # Calculate signature
+        if a == b:
+            signature = 0
+        else:
+            signature = abs(a - b) if a > b else (10 - abs(a - b))
+        
+        # New digit to be added
         new_digit = (weight + signature) % 10
-        
-        # Append the new digit between the current pair
+        new_colony.append(colony[i])
         new_colony.append(str(new_digit))
-        new_colony.append(colony[i + 1])
     
-    return ''.join(new_colony)
+    new_colony.append(colony[-1])  # add the last digit of the current colony
+    return ''.join(new_colony), weight
 
-# Get the total weight of the colony after the specified number of generations
-def get_weight_after_generations(colony, generations):
+def simulate_generations(colony, generations):
     current_colony = colony
-    
-    # Simulate colony growth for the given number of generations
     for _ in range(generations):
-        current_colony = generate_new_colony(current_colony)
-    
-    # Calculate and return the total weight of the final colony
-    return sum(int(digit) for digit in current_colony)
+        current_colony, _ = calculate_weight_and_new_colony(current_colony)
+    final_weight = sum(int(digit) for digit in current_colony)
+    return final_weight
 
-# POST endpoint to receive the request and process colony growth
 @app.route('/digital-colony', methods=['POST'])
 def digital_colony():
-    data = request.json
-    result = []
+    data = request.get_json()
+    results = []
     
-    # Process each colony in the request
-    for item in data:
-        generations = item['generations']
-        colony = item['colony']
-        
-        # Get the weight after specified generations
-        weight = get_weight_after_generations(colony, generations)
-        result.append(str(weight))
+    for entry in data:
+        generations = entry['generations']
+        colony = entry['colony']
+        weight_after_generations = simulate_generations(colony, generations)
+        results.append(str(weight_after_generations))
     
-    # Return the result as a JSON array
-    return jsonify(result)
+    return jsonify(results)
 
-# Entry point to start the Flask app
 if __name__ == '__main__':
     app.run(debug=True)
