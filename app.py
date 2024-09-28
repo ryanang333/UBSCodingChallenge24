@@ -16,7 +16,7 @@ def klotski_route():
             ans.append(klotski(el['board'], el['moves']))
     
     response = {
-        ans
+        "results" : ans
     }
     return jsonify(response), 200
 
