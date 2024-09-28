@@ -21,13 +21,12 @@ def efficient_hunter_kazuma():
 
             # Base cases
             dp[0] = 0  # No monsters, no efficiency
-            if monsters[0] > 0:
-                dp[1] = max(0, monsters[0] - 0)  # Only attack if there's something to defeat
+            dp[1] = max(0, monsters[1] - 1)  # Only attack if there's something to defeat
 
             # Fill the DP array
-            for i in range(1, n):
-                attack = max(0, monsters[i] - monsters[i - 1]) if i > 0 else monsters[i]
-                dp[i] = max(dp[i - 1], (dp[i - 2] + attack) if i > 1 else attack)
+            for i in range(2, n):
+                attack = max(0, monsters[i] - monsters[i-1] - 1)
+                dp[i] = max(dp[i - 1], dp[i - 2] + attack)
 
             results.append({"efficiency": dp[n - 1]})
 
