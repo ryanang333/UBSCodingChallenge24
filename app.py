@@ -395,6 +395,7 @@ def tourist():
             for j in range(i + 1, len(stations_list)):
                 next_station = stations_list[j]
                 travel_time = travelling_time_betw_stations[starting_line]
+                print(input_dict)
                 required_time = input_dict[next_station][1]
                 
                 if time_spent + travel_time + required_time <= time_limit:
@@ -420,8 +421,16 @@ def tourist():
 
 
 @app.route('/digital-colony', methods=['POST'])
+def calc():
+    if request.is_json:
+        data = request.get_json()
+        ans = digital_colony(data)
+        
+    return jsonify(ans), 200
+
 # Calculate signature of a pair of digits
 def calculate_signature(x, y):
+
     if x == y:
         return 0
     elif x > y:
@@ -464,21 +473,20 @@ def get_weight_after_generations(colony, generations):
     return sum(int(digit) for digit in current_colony)
 
 
-def digital_colony():
-    data = request.json
+def digital_colony(data):
     result = []
-    
     # Process each colony in the request
     for item in data:
         generations = item['generations']
         colony = item['colony']
+        print(colony)
         
         # Get the weight after specified generations
         weight = get_weight_after_generations(colony, generations)
         result.append(str(weight))
     
     # Return the result as a JSON array
-    return jsonify(result)
+    return result
 
 def max_bugs_fixed(bug_seq):
     # Sort bugs by their limits
