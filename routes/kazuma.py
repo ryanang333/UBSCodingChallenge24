@@ -5,30 +5,26 @@ app = Flask(__name__)
 def calculate_efficiency(monsters):
     """Helper function to calculate maximum efficiency for given monsters."""
     n = len(monsters)
+    
+    # If there are no monsters or only one monster, no attack is efficient
+    if n == 0 or (n == 1 and monsters[0] <= 0):
+        return 0
 
-    # Handle edge cases for efficiency
-    if n == 0:
-        return 0  # No monsters, no efficiency
-    if n == 1:
-        return 0  # One monster, no efficiency
+    # Initialize the DP array
+    dp = [0] * n
 
-    # Initialize the last two states for DP
-    prev2 = 0  # Efficiency from two steps back
-    prev1 = 0  # Efficiency from one step back
+    # Fill the DP array based on the logic derived
+    for i in range(n):
+        # Case 1: Move to rear (don't attack this time frame)
+        if i > 0:
+            dp[i] = dp[i - 1]
 
-    # Iterate through the monsters starting from the second one
-    for i in range(1, n):
-        # Calculate potential efficiency gain by attacking the current monster
-        attack_gain = max(0, monsters[i] - monsters[i - 1])
-        # Current efficiency based on the last two states
-        current_efficiency = max(prev1, prev2 + attack_gain)
+        # Case 2: Prepare a transmutation circle and attack this time frame
+        if i >= 1:  # Need at least one time frame to prepare
+            gain = monsters[i] - 1 if monsters[i] > 0 else 0
+            dp[i] = max(dp[i], dp[i - 2] + gain if i > 1 else gain)
 
-        # Move the window forward
-        prev2 = prev1
-        prev1 = current_efficiency
-
-    return prev1  # Return the last calculated efficiency
-
+    return dp[n - 1]  # The last entry has the maximum efficiency
 
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
