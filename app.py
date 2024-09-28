@@ -262,13 +262,19 @@ def calculate_letter_frequencies(possible_words):
     return letter_count
 
 def score_word(word, letter_frequencies):
-    """Score the word based on letter frequencies."""
-    return sum(letter_frequencies[letter] for letter in set(word))
+    """Score the word based on letter frequencies with positional weights."""
+    score = 0
+    for i, letter in enumerate(word):
+        # Weight letters based on their position (e.g., first letters are more important)
+        weight = 1 + (len(word) - i)  # Higher weight for earlier positions
+        score += letter_frequencies[letter] * weight
+    return score
 
 def filter_possible_words(possible_words, guess_history, evaluation_history):
     """Filter possible words based on guess history and feedback."""
     for guess, evaluation in zip(guess_history, evaluation_history):
         new_possible_words = set()
+        guess_set = set(guess)  # Convert guess to set for faster membership testing
         for word in possible_words:
             match = True
             for i, feedback in enumerate(evaluation):
