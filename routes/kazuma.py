@@ -7,17 +7,17 @@ def calculate_efficiency(monsters):
     if n == 0:
         return 0
     
-    # Initialize dp array
-    dp = [0] * (n + 2)  # Extra space for ease of calculation
+    # Initialize dp array with zeroes
+    dp = [0] * (n + 2)  # Extra space for boundary conditions
 
     # Fill dp array from back to front
     for i in range(n - 1, -1, -1):
-        # Option 1: Attack now
+        # Calculate potential earnings if attacking now
         attack_now = monsters[i] + (dp[i + 2] if i + 2 < n else 0) - 1
-        # Option 2: Move to rear
+        # Carry over max efficiency from the next time frame
         move_to_rear = dp[i + 1]
         
-        # Choose the best option
+        # Store the maximum of both options
         dp[i] = max(attack_now, move_to_rear)
 
     return max(dp[0], 0)  # Ensure non-negative efficiency
