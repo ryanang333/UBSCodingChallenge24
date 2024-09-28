@@ -259,65 +259,51 @@ import math
 from collections import Counter
 def calculate_letter_frequencies(possible_words):
     """Calculate the frequency of each letter in the possible words."""
-    return Counter(letter for word in possible_words for letter in word)
+    letter_count = Counter()
+    for word in possible_words:
+        letter_count.update(word)
+    return letter_count
 
-def get_feedback_mask(guess, solution):
-    """Return feedback for the guess against the solution."""
-    feedback = []
-    used_indices = set()
+def score_word(word, letter_frequencies):
+    """Score the word based on letter frequencies and unique letters."""
+    score = sum(letter_frequencies[letter] for letter in set(word))  # Frequency score
+    unique_letter_count = len(set(word))  # Unique letters count
+    return score + unique_letter_count  # Combine scores
 
-    # First pass for correct positions
-    for i in range(len(guess)):
-        if guess[i] == solution[i]:
-            feedback.append('O')
-            used_indices.add(i)
-        else:
-            feedback.append(None)  # Placeholder
-
-    # Second pass for wrong positions
-    for i in range(len(guess)):
-        if feedback[i] is None:
-            if guess[i] in solution and solution.index(guess[i]) not in used_indices:
-                feedback[i] = 'X'
-            else:
-                feedback[i] = '-'
-
-    return feedback
-
-def evaluate_word(word, guess, feedback):
-    """Evaluate if a word is valid based on the guess and feedback."""
-    for i, char in enumerate(guess):
-        if feedback[i] == 'O' and word[i] != char:
-            return False  # Correct letter in the wrong position
-        elif feedback[i] == 'X' and (char not in word or word[i] == char):
-            return False  # Letter is in the word but in the wrong position
-        elif feedback[i] == '-' and char in word:
-            return False  # Letter is not in the word at all
-    return True
+def filter_possible_words(possible_words, guess_history, evaluation_history):
+    """Filter possible words based on guess history and feedback."""
+    for guess, evaluation in zip(guess_history, evaluation_history):
+        new_possible_words = set()
+        for word in possible_words:
+            match = True
+            for i, feedback in enumerate(evaluation):
+                if feedback == 'O' and word[i] != guess[i]:
+                    match = False
+                    break
+                elif feedback == 'X' and (guess[i] not in word or word[i] == guess[i]):
+                    match = False
+                    break
+                elif feedback == '-' and guess[i] in word:
+                    match = False
+                    break
+            if match:
+                new_possible_words.add(word)
+        possible_words = new_possible_words
+    return possible_words
 
 def get_next_guess(guess_history, evaluation_history, possible_words):
     """Determine the next guess based on guess history and feedback."""
     if not possible_words:
-        return random.choice(WORD_LIST)  # Fallback if no possible words remain
+        return random.choice(WORD_LIST)  # Fallback to a random guess
 
-    # Calculate letter frequencies
+    # Calculate letter frequencies to prioritize the next guess
     letter_frequencies = calculate_letter_frequencies(possible_words)
 
-    # Score words based on letter frequencies and positional value
-    def score_word(word):
-        score = 0
-        for i, letter in enumerate(word):
-            score += letter_frequencies[letter] * (1 + (5 - i))  # Weight by position
-        return score
+    # Score all possible words and sort them by score
+    scored_words = [(word, score_word(word, letter_frequencies)) for word in possible_words]
+    scored_words.sort(key=lambda x: x[1], reverse=True)
 
-    # Filter possible words based on previous guesses and their evaluations
-    for guess, evaluation in zip(guess_history, evaluation_history):
-        possible_words = [word for word in possible_words if evaluate_word(word, guess, evaluation)]
-
-    # Sort possible words by score
-    sorted_words = sorted(possible_words, key=score_word, reverse=True)
-
-    return sorted_words[0] if sorted_words else random.choice(WORD_LIST)  # Return best guess
+    return scored_words[0][0]  # Return the best guess based on scores
 
 @app.route('/wordle-game', methods=['POST'])
 def wordle_game():
@@ -330,12 +316,7 @@ def wordle_game():
         possible_words = set(WORD_LIST)  # Start with all possible words
 
         if guess_history and evaluation_history:
-            for guess, evaluation in zip(guess_history, evaluation_history):
-                # Filter possible words based on feedback
-                possible_words = [
-                    word for word in possible_words
-                    if evaluate_word(word, guess, evaluation)
-                ]
+            possible_words = filter_possible_words(possible_words, guess_history, evaluation_history)
 
         next_guess = get_next_guess(guess_history, evaluation_history, possible_words)
         return jsonify({"guess": next_guess})
