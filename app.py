@@ -395,7 +395,8 @@ def tourist():
             for j in range(i + 1, len(stations_list)):
                 next_station = stations_list[j]
                 travel_time = travelling_time_betw_stations[starting_line]
-                print("Available keys in input_dict:", input_dict.keys())
+                if next_station not in input_dict:
+                    continue
                 required_time = input_dict[next_station][1]
                 
                 if time_spent + travel_time + required_time <= time_limit:
