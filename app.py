@@ -746,34 +746,37 @@ def the_clumsy_programmer():
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
     data = request.json
-    results = []
-
+    results = []        
     for hunt in data:
         monsters = hunt["monsters"]
         n = len(monsters)
-
-        if n == 0:
+        efficiency = 0
+        i = 0
+        if n == 1:
             results.append({"efficiency": 0})
             continue
-        
-        # Initialize variables for tracking efficiencies
-        prev_efficiency = 0  # Efficiency when skipping current monster
-        curr_efficiency = 0  # Efficiency when considering current monster
+        while i < n:
+            # Skip cooldown time if the next monster is stronger
+            if i < n - 1 and monsters[i + 1] > monsters[i]:
+                i += 1
+                continue
+            
+            # Check if there are monsters to attack
+            if monsters[i] > 0:
+                # Calculate fee and attack if conditions are met
+                fee = monsters[i - 1] if i > 0 else 0
+                attack = monsters[i]
 
-        for i in range(n - 1, -1, -1):
-            # Calculate potential efficiency if attacking the current monster
-            attack_value = monsters[i]
-            fee = monsters[i - 1] if i > 0 else 0
-            net_gain = max(0, attack_value - fee)
+                if i + 1 < n and attack > monsters[i + 1]:
+                    efficiency += max(0, attack - fee)
+                    i += 2  # Skip cooldown time after attack
+                else:
+                    efficiency += max(0, attack - fee)  # Attack even if not skipping
+                    i += 1  # Move to next time frame
+            else:
+                i += 1  # Move to next time frame if no monsters
 
-            # Update the current efficiency considering both attack and skip
-            next_efficiency = prev_efficiency if i + 1 < n else 0  # Previous step efficiency
-            curr_efficiency = max(net_gain + (prev_efficiency if i + 2 < n else 0), next_efficiency)
-
-            # Move to the next state
-            prev_efficiency, curr_efficiency = curr_efficiency, prev_efficiency
-
-        results.append({"efficiency": prev_efficiency})  # The maximum efficiency starting from the first monster
+        results.append({"efficiency": efficiency})
     
     return jsonify(results)
 if __name__ == '__main__':
