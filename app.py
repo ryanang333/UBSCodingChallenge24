@@ -261,6 +261,29 @@ def calculate_letter_frequencies(possible_words):
     """Calculate the frequency of each letter in the possible words."""
     return Counter(letter for word in possible_words for letter in word)
 
+def get_feedback_mask(guess, solution):
+    """Return feedback for the guess against the solution."""
+    feedback = []
+    used_indices = set()
+
+    # First pass for correct positions
+    for i in range(len(guess)):
+        if guess[i] == solution[i]:
+            feedback.append('O')
+            used_indices.add(i)
+        else:
+            feedback.append(None)  # Placeholder
+
+    # Second pass for wrong positions
+    for i in range(len(guess)):
+        if feedback[i] is None:
+            if guess[i] in solution and solution.index(guess[i]) not in used_indices:
+                feedback[i] = 'X'
+            else:
+                feedback[i] = '-'
+
+    return feedback
+
 def evaluate_word(word, guess, feedback):
     """Evaluate if a word is valid based on the guess and feedback."""
     for i, char in enumerate(guess):
@@ -280,21 +303,21 @@ def get_next_guess(guess_history, evaluation_history, possible_words):
     # Calculate letter frequencies
     letter_frequencies = calculate_letter_frequencies(possible_words)
 
-    # Create a scoring function for words based on letter frequencies
+    # Score words based on letter frequencies and positional value
     def score_word(word):
-        return sum(letter_frequencies[letter] for letter in set(word))
+        score = 0
+        for i, letter in enumerate(word):
+            score += letter_frequencies[letter] * (1 + (5 - i))  # Weight by position
+        return score
 
     # Filter possible words based on previous guesses and their evaluations
     for guess, evaluation in zip(guess_history, evaluation_history):
         possible_words = [word for word in possible_words if evaluate_word(word, guess, evaluation)]
 
     # Sort possible words by score
-    if not possible_words:
-        return random.choice(WORD_LIST)  # Fallback if no valid words remain
-
     sorted_words = sorted(possible_words, key=score_word, reverse=True)
 
-    return sorted_words[0]  # Return the best guess based on scores
+    return sorted_words[0] if sorted_words else random.choice(WORD_LIST)  # Return best guess
 
 @app.route('/wordle-game', methods=['POST'])
 def wordle_game():
@@ -319,7 +342,6 @@ def wordle_game():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
 
 
 @app.route('/tourist', methods=['POST'])
