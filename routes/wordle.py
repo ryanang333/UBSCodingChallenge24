@@ -7,7 +7,9 @@ from collections import Counter, defaultdict
 
 
 app = Flask(__name__)
-word_list =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abate', 
+
+# This could be replaced with a more extensive list of possible words.
+WORD_LIST =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abate', 
 'abbot', 'abele', 'abets', 'abhor', 'abide', 'abies', 'ables', 'abode', 'abohm', 'abort', 'about',
 'above', 'abuse', 'abuts', 'abuzz', 'abyes', 'abysm', 'abyss', 'accra', 
 'acerb', 'acids', 'ackee', 'acmes', 'acned', 'acnes', 'acold', 'acorn', 'acres', 
@@ -55,286 +57,59 @@ word_list =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abat
 'navel', 'naves', 'navvy', 'nawab', 'nazis', 'neaps', 'nears', 'neats', 'necks', 'needs', 'needy', 'neems', 'negro', 'negus', 'nehru', 'neigh', 'neons', 'nepal', 'nerds', 'nerve', 'nervy', 'nests', 'netts', 'never', 'neves', 'nevus', 'newel', 'newly', 'newsy', 'newts', 'nexus', 'ngwee', 'niche', 'nicks', 'nidus', 'niece', 'nifty', 'nighs', 'night', 'nihil', 'nines', 'ninja', 'ninny', 'ninon', 'ninth', 'nintu', 'niobe', 'nipas', 'nippy', 'nisan', 'nisei', 'nisus', 'niter', 'nitid', 'nitre', 'nixon', 'nobel', 'noble', 'nobly', 'nocks', 'nodes', 'noels', 'noemi', 'noise', 'noisy', 'nomad', 'nomas', 'nomes', 'nonce', 'nones', 'nooks', 'nooky', 'noons', 'noose', 'nopal', 'noria', 'norma', 'norms', 'norse', 'north', 'nosed', 'noses', 'nosey', 'notch', 'noted', 'nouns', 'novas', 'novel', 'nubby', 'nubia', 'nucha', 'nudes', 'nudge', 'nukes', 'nulls', 'numbs', 'numen', 'numsi', 'nurse', 'nutty', 'nyala', 'nylon', 'nymph', 'nyssa', 'oaken', 'oakum', 'oasis', 'oasts', 'oaten', 'oaves', 'obeah', 'obese', 'obeys', 'obits', 'oboes', 'occur', 'ocean', 'ocher', 'ochna', 'ochre', 'octad', 'octal', 'octet', 'oddly', 'odist', 'odium', 'odors', 'odour', 'offal', 'offer', 'often', 'ogees', 'ogive', 'ogler', 'ogles', 'ogres', 'ohmic', 'oiled', 'oiler', 'oinks', 'okapi', 'okays', 'okehs', 'okras', 'olden', 'older', 'oldie', 'olein', 'oleos', 'olive', 'ollas', 'ology', 'omaha', 'omani', 'omega', 'omens', 'omits', 'onces', 'onion', 'onset', 'oomph', 'ootid', 'oozes', 'opahs', 'opals', 'opens', 'opera', 'opine', 'opium', 'opsin', 'optic', 'orach', 'orals', 'orang', 'orans', 'orate', 'orbit', 'orcas', 'order', 'oread', 'organ', 'oriel', 'orion', 'oriya', 'orlon', 'orlop', 'ormer', 'orpin', 'orris', 'oryza', 'osage', 'osaka', 'oscan', 'oscar', 'osier', 'other', 'otpaf', 'ottar', 'otter', 'ouija', 'ounce', 'ousel', 'ousts', 'outdo', 'outer', 'outgo', 'outre', 'ouzel', 'ouzos', 'ovals', 'ovary', 'ovate', 'ovens', 'overs', 'overt', 'ovine', 'ovoid', 'ovolo', 'ovule', 'owing', 'owlet', 'owned', 'owner', 'oxbow', 'oxeye', 'oxide', 'oxime', 'oxlip', 'ozena', 'ozone', 'pacas', 'pacer', 'paces', 'pacha', 'packs', 'pacts', 'padda', 'paddy', 'pader', 'padre', 'paean', 'pagan', 'pager', 'pages', 'pails', 'paine', 'pains', 'paint', 'paisa', 'palas', 'palau', 'palis', 'palls', 'pally', 'palms', 'palmy', 'palsy', 'panax', 'panda', 'panel', 'panes', 'panga', 'pangs', 'panic', 'pansy', 'panto', 'pants', 'panty', 'papal', 'papas', 'papaw', 'paper', 'papio', 'papua', 'paras', 'parch', 'parer', 'pares', 'paris', 'parka', 'parks', 'parky', 'parrs', 'parry', 'parse', 'parsi', 'parts', 'party', 'parus', 'parve', 'pasch', 'paseo', 'pasha', 'passe', 'pasta', 'paste', 'pasts', 'pasty', 'patas', 'patch', 'pater', 'pates', 'patio', 'patsy', 'patty', 'pause', 'pavan', 'paved', 'pavis', 'pawer', 'pawky', 'pawls', 'pawns', 'paxes', 'payee', 'payer', 'peace', 'peach', 'peags', 'peaks', 'peaky', 'peals', 'peans', 'pearl', 'peats', 'peaty', 'peavy', 'pecan', 'pecks', 'pecos', 'pedal', 'peeks', 'peels', 'peens', 'peeps', 'peers', 'peeve', 'pekan', 'pekes', 'pekoe', 'pelew', 'pelfs', 'pelts', 'penal', 'pengo', 'penis', 'penni', 'penny', 'peons', 'peony', 'peppy', 'pepsi', 'perca', 'perch', 'percy', 'peril', 'perks', 'perky', 'perms', 'perry', 'pesah', 'pesky', 'pesos', 'pests', 'petal', 'peter', 'petty', 'pewee', 'pewit', 'phage', 'phase', 'phial', 'phlox', 'phoca', 'phone', 'phons', 'phony', 'photo', 'phots', 'phyle', 'physa', 'piano', 'picas', 'picea', 'pichi', 'picks', 'picky', 'picot', 'picul', 'picus', 'piece', 'piers', 'pieta', 'piety', 'piggy', 'pigmy', 'pikas', 'pikes', 'pilaf', 'pilar', 'pilau', 'pilaw', 'pilea', 'piles', 'pilot', 'pilus', 'pimas', 'pimps', 'pinch', 'pings', 'pinko', 'pinks', 'pinky', 'pinna', 'pinny', 'pinon', 'pinot', 'pinto', 'pints', 'pinus', 'pious', 'pipal', 'piper', 'pipes', 'pipet', 'pipit', 'pipra', 'pique', 'piste', 'pisum', 'pitas', 'pitch', 'piths', 'pithy', 'piton', 'pitta', 'piute', 'pivot', 'pixel', 'pixes', 'pixie', 'pizza', 'place', 'plage', 'plaid', 'plain', 'plait', 'plane', 'plank', 'plans', 'plant', 'plash', 'plasm', 'plate', 'plato', 'plats', 'platy', 'plays', 'plaza', 'plead', 'pleat', 'plebe', 'plica', 'plier', 'pliny', 'ploce', 'plods', 'plonk', 'plops', 'plots', 'plows', 'ploys', 'pluck', 'plugs', 'plumb', 'plume', 'plump', 'plums', 'plumy', 'plunk', 'plush', 'pluto', 'plyer', 'poach', 'pocks', 'podgy', 'poems', 'poesy', 'poets', 'pogey', 'pogge', 'poilu', 'point', 'poise', 'poker', 'pokes', 'pokey', 'polar', 'poler', 'poles', 'polio', 'polka', 'polls', 'polyp', 'pomes', 'pommy', 'pomps', 'ponca', 'ponce', 'ponds', 'pones', 'pongo', 'pooch', 'poods', 'poons', 'poops', 'poove', 'popes', 'poppy', 'porch', 'pores', 'porgy', 'porks', 'porno', 'porns', 'porta', 'porte', 'porto', 'ports', 'posed', 'poser', 'poses', 'posit', 'posse', 'posts', 'potto', 'potty', 'pouch', 'poufs', 'pound', 'pours', 'pouts', 'power', 'poxes', 'poyou', 'prams', 'prang', 'prank', 'prate', 'prats', 'prawn', 'praya', 'prays', 'preen', 'preps', 'press', 'prexy', 'preys', 'priam', 'price', 'prick', 'pricy', 'pride', 'pries', 'prigs', 'prima', 'prime', 'primo', 'primp', 'prims', 'prink', 'print', 'prion', 'prior', 'prise', 'prism', 'privy', 'prize', 'probe', 'prods', 'profs', 'prole', 'promo', 'proms', 'prone', 'prong', 'proof', 'props', 'prose', 'prosy', 'proto', 'proud', 'prove', 'prowl', 'prows', 'proxy', 'prude', 'prune', 'psalm', 'pseud', 'psoas', 'pubes', 'pubic', 'pubis', 'puces', 'pucka', 'pucks', 'pudge', 'pudgy', 'puffs', 'puffy', 'pukes', 'pukka', 'pulas', 'pules', 'pulex', 'pulls', 'pulps', 'pulpy', 'pulse', 'pumas', 'pumps', 'punch', 'pungs', 'punic', 'punks', 'punky', 'punts', 'pupal', 'pupas', 'pupil', 'puppy', 'purau', 'puree', 'purge', 'purim', 'purls', 'purrs', 'purse', 'pursy', 'puses', 'pushy', 'pussy', 'putts', 'putty', 'pygmy', 'pylon', 'pyres', 'pyrex', 'pyrus', 'pyxes', 'pyxie', 'pyxis', 'qatar', 'qibla', 'qophs', 'quack', 'quads', 'quaff', 'quags', 'quail', 'quake', 'qualm', 'quark', 'quart', 'quash', 'quasi', 'quays', 'queen', 'queer', 'quell', 'quern', 'query', 'quest', 'queue', 'quick', 'quids', 'quiet', 'quiff', 'quill', 'quilt', 'quins', 'quint', 'quips', 'quipu', 'quira', 'quire', 'quirk', 'quirt', 'quite', 'quito', 'quits', 'quoin', 'quoit', 'quota', 'quote', 'rabat', 'rabbi', 'rabid', 'racer', 'racks', 'racon', 'radar', 'radio', 'radix', 'radon', 'rafts', 'ragee', 'rages', 'ragis', 'raids', 'rails', 'rainy', 'raise', 'rajab', 'rajah', 'rakes', 'rales', 'rally', 'ramee', 'ramie', 'ramps', 'ramus', 'ranch', 'rands', 'randy', 'ranee', 'range', 'rangy', 'ranid', 'ranis', 'ranks', 'rants', 'raped', 'raper', 'rapes', 'raphe', 'rapid', 'rases', 'rasps', 'raspy', 'ratan', 'ratch', 'ratel', 'rates', 'ratio', 'ratty', 'ravel', 'raven', 'raver', 'raves', 'rayon', 'razed', 'razes', 'razor', 'reach', 'react', 'reads', 'ready', 'realm', 'reams', 'reaps', 'rearm', 'rears', 'reata', 'reave', 'rebel', 'rebus', 'rebut', 'recap', 'recce', 'recco', 'reccy', 'recto', 'recur', 'redes', 'redly', 'redos', 'redox', 'redux', 'reeds', 'reedy', 'reefs', 'reefy', 'reeks', 'reels', 'reeve', 'refer', 'refit', 'regal', 'regur', 'reich', 'reify', 'reign', 'rejig', 'relax', 'relay', 'relic', 'remit', 'remus', 'renal', 'rends', 'renew', 'renin', 'rente', 'rents', 'repay', 'repel', 'reply', 'repot', 'repps', 'rerun', 'reset', 'resew', 'resid', 'resin', 'rests', 'retch', 'retem', 'retie', 'retro', 'retry', 'reuse', 'revel', 'revet', 'revue', 'rexes', 'rheas', 'rhein', 'rheum', 'rhine', 'rhino', 'rhomb', 'rhumb', 'rhyme', 'rials', 'riant', 'riata', 'ribes', 'ricer', 'rices', 'ricin', 'ricks', 'rider', 'rides', 'ridge', 'riels', 'riffs', 'rifle', 'rifts', 'rigel', 'right', 'rigid', 'rigor', 'riled', 'riles', 'riley', 'rills', 'rimas', 'rimed', 'rimes', 'rinds', 'rings', 'rinks', 'rinse', 'riots', 'ripen', 'ripes', 'risen', 'riser', 'risks', 'risky', 'rites', 'ritzy', 'rival', 'river', 'rives', 'rivet', 'riyal', 'roach', 'roads', 'roams', 'roans', 'roars', 'roast', 'robed', 'robes', 'robin', 'roble', 'robot', 'rocks', 'rocky', 'rodeo', 'rogue', 'roils', 'roily', 'roles', 'rollo', 'rolls', 'roman', 'romeo', 'romps', 'rondo', 'roods', 'roofs', 'roofy', 'rooks', 'rooms', 'roomy', 'roost', 'roots', 'roper', 'ropes', 'ropey', 'roses', 'rosin', 'rotas', 'rotes', 'rotls', 'rotor', 'roues', 'rouge', 'rough', 'round', 'rouse', 'route', 'routs', 'rover', 'roves', 'rowan', 'rowdy', 'rowel', 'rower', 'royal', 'rubes', 'rubia', 'ruble', 'rubor', 'rubus', 'rucks', 'rudds', 'ruddy', 'ruffs', 'rugby', 'ruins', 'ruled', 'ruler', 'rumba', 'rumen', 'rumex', 'rummy', 'rumor', 'rumps', 'runch', 'runes', 'rungs', 'runic', 'runny', 'runts', 'runty', 'rupee', 'rural', 'ruses', 'rushy', 'rusks', 'rusts', 'rusty', 'ruths', 'rutty', 'sabal', 'saber', 'sabin', 'sable', 'sabot', 'sabra', 'sabre', 'sacks', 'sades', 'sadhe', 'sadhu', 'sadly', 'safar', 'safes', 'sages', 'sagos', 'sahib', 'saids', 'saiga', 'sails', 'saint', 'sakes', 'sakis', 'sakti', 'salad', 'salal', 'salat', 'salem', 'sales', 'salix', 'sally', 'salmi', 'salmo', 'salol', 'salon', 'salpa', 'salps', 'salsa', 'salty', 'salve', 'salvo', 'saman', 'samba', 'samen', 'samoa', 'sands', 'sandy', 'sanes', 'santa', 'sapid',
 'sappy', 'sarah', 'saran', 'sards', 'saree', 'sarin', 'sassy', 'satan', 'sates', 'satin', 'satyr', 'sauce', 'saucy', 'saudi', 'sauls', 'sauna', 'saury', 'saute', 'saved', 'saver', 'saves', 'savin', 'savor', 'savoy', 'savvy', 'sawan', 'saxes', 'saxon', 'scabs', 'scads', 'scags', 'scald', 'scale', 'scalp', 'scaly', 'scamp', 'scams', 'scans', 'scant', 'scape', 'scare', 'scarf', 'scarp', 'scars', 'scary', 'scats', 'scaup', 'scend', 'scene', 'scent', 'schmo', 'schwa', 'scion', 'scoff', 'scoke', 'scold', 'scone', 'scoop', 'scoot', 'scope', 'score', 'scorn', 'scots', 'scott', 'scour', 'scout', 'scowl', 'scows', 'scrag', 'scram', 'scrap', 'scree', 'screw', 'scrim', 'scrip', 'scrod', 'scrub', 'scrum', 'scuba', 'scuds', 'scuff', 'scull', 'scums', 'scups', 'scurf', 'scute', 'scuts', 'seals', 'seams', 'seamy', 'sears', 'seats', 'sebum', 'sects', 'sedan', 'seder', 'sedge', 'sedgy', 'sedum', 'seeds', 'seedy', 'seeks', 'seels', 'seems', 'seeps', 'seers', 'segno', 'segue', 'seine', 'seism', 'seize', 'selfs', 'sells', 'selva', 'semen', 'sends', 'senna', 'senor', 'sense', 'sents', 'seoul', 'sepal', 'sepia', 'septs', 'serer', 'seres', 'serfs', 'serge', 'serif', 'serin', 'serow', 'serra', 'serum', 'serve', 'servo', 'seton', 'setup', 'seven', 'sever', 'sewed', 'sewer', 'sexed', 'sexes', 'sexts', 'sfebe', 'shack', 'shade', 'shads', 'shady', 'shaft', 'shags', 'shahs', 'shake', 'shako', 'shaky', 'shale', 'shame', 'shams', 'shang', 'shank', 'shape', 'shard', 'share', 'shari', 'shark', 'sharp', 'shave', 'shawl', 'shawm', 'shawn', 'shaws', 'sheaf', 'shear', 'sheds', 'sheen', 'sheep', 'sheer', 'sheet', 'sheik', 'shelf', 'shell', 'shema', 'sherd', 'shews', 'shiah', 'shies', 'shift', 'shill', 'shims', 'shina', 'shine', 'shins', 'shiny', 'ships', 'shire', 'shirk', 'shirr', 'shirt', 'shits', 'shiva', 'shivs', 'shlep', 'shoal', 'shoat', 'shock', 'shoed', 'shoes', 'shogi', 'shoji', 'shona', 'shook', 'shoos', 'shoot', 'shops', 'shore', 'shorn', 'short', 'shote', 'shots', 'shout', 'shove', 'shows', 'showy', 'shred', 'shrew', 'shrub', 'shrug', 'shuck', 'shuns', 'shunt', 'shush', 'shute', 'shuts', 'shyly', 'sials', 'sibyl', 'sicks', 'sides', 'sidle', 'siege', 'sieve', 'sifts', 'sighs', 'sight', 'sigma', 'signs', 'sikhs', 'silds', 'silex', 'silks', 'silky', 'sills', 'silly', 'silos', 'silts', 'silty', 'silva', 'simal', 'simas', 'simon', 'since', 'sines', 'sinew', 'singe', 'sings', 'sinks', 'sinus', 'sioux', 'siren', 'sires', 'siris', 'sirup', 'sisal', 'sises', 'sissu', 'sissy', 'sitar', 'sites', 'sitka', 'sitta', 'siums', 'sivan', 'siwan', 'sixer', 'sixes', 'sixth', 'sixty', 'sized', 'sizes', 'skags', 'skate', 'skeat', 'skeet', 'skegs', 'skein', 'skeps', 'skews', 'skids', 'skier', 'skies', 'skiff', 'skill', 'skimp', 'skims', 'skink', 'skins', 'skint', 'skips', 'skirl', 'skirt', 'skits', 'skive', 'skuas', 'skulk', 'skull', 'skunk', 'slabs', 'slack', 'slags', 'slain', 'slake', 'slams', 'slang', 'slant', 'slaps', 'slash', 'slask', 'slate', 'slats', 'slaty', 'slave', 'slavs', 'slaws', 'slays', 'sleds', 'sleek', 'sleep', 'sleet', 'slews', 'slice', 'slick', 'slide', 'slime', 'slims', 'slimy', 'sling', 'slink', 'slips', 'slits', 'slobs', 'sloes', 'slogs', 'sloop', 'slope', 'slops', 'slosh', 'sloth', 'slots', 'slows', 'slubs', 'slues', 'slugs', 'slump', 'slums', 'slurp', 'slurs', 'slush', 'sluts', 'slyly', 'smack', 'small', 'smarm', 'smart', 'smash', 'smear', 'smell', 'smelt', 'smews', 'smile', 'smirk', 'smite', 'smith', 'smock', 'smogs', 'smoke', 'smoky', 'smuts', 'snack', 'snafu', 'snags', 'snail', 'snake', 'snaky', 'snaps', 'snare', 'snarl', 'snead', 'sneak', 'sneer', 'snick', 'snide', 'sniff', 'snipe', 'snips', 'snits', 'snobs', 'snoek', 'snood', 'snook', 'snoop', 'snoot', 'snore', 'snort', 'snots', 'snout', 'snows', 'snowy', 'snubs', 'snuff', 'snugs', 'soaks', 'soaps', 'soapy', 'soars', 'soave', 'sober', 'socks', 'socle', 'sodas', 'soddy', 'sodom', 'sofas', 'sofia', 'softs', 'softy', 'soggy', 'soils', 'sojas', 'solan', 'solar', 'solea', 'soled', 'soles', 'solfa', 'solid', 'solon', 'solos', 'solve', 'somas', 'sonar', 'sones', 'songs', 'sonic', 'sonny', 'sonsy', 'sooth', 'soots', 'sooty', 'sophs', 'sopor', 'soppy', 'sorbs', 'sores', 'sorex', 'sorgo', 'sorry', 'sorts', 'sorus', 'sotho', 'sough', 'souls', 'sound', 'soups', 'soupy', 'sours', 'souse', 'south', 'sower', 'soyas', 'space', 'spacy', 'spade', 'spain', 'spall', 'spang', 'spank', 'spare', 'spark', 'spars', 'spasm', 'spate', 'spats', 'spawl', 'spawn', 'spays', 'speak', 'spear', 'speck', 'specs', 'speed', 'speer', 'spell', 'spelt', 'spend', 'spent', 'sperm', 'spews', 'spica', 'spice', 'spick', 'spics', 'spicy', 'spiel', 'spies', 'spiff', 'spike', 'spiks', 'spiky', 'spile', 'spill', 'spine', 'spins', 'spiny', 'spire', 'spirt', 'spite', 'spits', 'spitz', 'spivs', 'splat', 'splay', 'split', 'spock', 'spode', 'spoil', 'spoke', 'spoof', 'spook', 'spool', 'spoon', 'spoor', 'spore', 'sport', 'spots', 'spout', 'sprag', 'sprat', 'spray', 'spree', 'sprig', 'sprit', 'sprue', 'spuds', 'spues', 'spume', 'spumy', 'spunk', 'spurn', 'spurs', 'spurt', 'squab', 'squad', 'squat', 'squaw', 'squib', 'squid', 'stabs', 'stack', 'staff', 'stage', 'stags', 'stagy', 'staid', 'stain', 'stair', 'stake', 'stale', 'stalk', 'stall', 'stamp', 'stand', 'staph', 'stare', 'stark', 'starr', 'stars', 'start', 'stash', 'state', 'stave', 'stays', 'stead', 'steak', 'steal', 'steam', 'steed', 'steel', 'steen', 'steep', 'steer', 'stein', 'stela', 'stele', 'stems', 'stent', 'steps', 'stern', 'stets', 'stews', 'stick', 'sties', 'stiff', 'stile', 'still', 'stilt', 'sting', 'stink', 'stint', 'stipe', 'stirk', 'stirs', 'stoat', 'stobs', 'stock', 'stoep', 'stogy', 'stoic', 'stoke', 'stole', 'stoma', 'stomp', 'stone', 'stony', 'stool', 'stoop', 'stops', 'store', 'stork', 'storm', 'story', 'stoup', 'stout', 'stove', 'stows', 'strad', 'strap', 'straw', 'stray', 'strep', 'strew', 'stria', 'strip', 'strix', 'strop', 'strum', 'strut', 'stubs', 'stuck', 'studs', 'study', 'stuff', 'stump', 'stung', 'stuns', 'stunt', 'stupa', 'stupe', 'styes', 'style', 'stymy', 'suave', 'sucre', 'sudan', 'sudor', 'sudra', 'sudsy', 'suede', 'suers', 'suets', 'suety', 'sugar', 'sugis', 'suite', 'suits', 'sulfa', 'sulks', 'sulky', 'sulla', 'sully', 'sumac', 'sumos', 'sumps', 'sunna', 'sunni', 'sunny', 'sunup', 'suomi', 'super', 'supra', 'suras', 'surds', 'sures', 'surfs', 'surge', 'surly', 'surya', 'sushi', 'sutra', 'swabs', 'swage', 'swags', 'swain', 'swale', 'swami', 'swamp', 'swank', 'swans', 'swaps', 'sward', 'swarm', 'swart', 'swash', 'swath', 'sways', 'swazi', 'swear', 'sweat', 'swede', 'sweep', 'sweet', 'swell', 'swept', 'swift', 'swigs', 'swill', 'swims', 'swine', 'swing', 'swipe', 'swirl', 'swish', 'swiss', 'swobs', 'swoon', 'swoop', 'swops', 'sword', 'sworn', 'swosh', 'swots', 'sylph', 'sylva', 'syncs', 'synod', 'syria', 'syrup', 'tabby', 'tabes', 'tabis', 'table', 'taboo', 'tabor', 'tacca', 'tachs', 'tacit', 'tacks', 'tacky', 'tacos', 'tacts', 'taels', 'taffy', 'tagus', 'tails', 'taint', 'tajik', 'taken', 'taker', 'takes', 'takin', 'talas', 'talcs', 'talks', 'talky', 'tally', 'talon', 'talus', 'tamal', 'tamed', 'tamer', 'tames', 'tamil', 'tammy', 'tampa', 'tamps', 'tamus', 'tandy', 'tanga', 'tango', 'tangs', 'tangy', 'tanka', 'tanks', 'tansy', 'taped', 'taper', 'tapes', 'tapir', 'tapis', 'tappa', 'tardy', 'tares', 'tarns', 'taros', 'tarot', 'tarps', 'tarry', 'tarts', 'tasks', 'tasse', 'taste', 'tasty', 'tatar', 'tater', 'tates', 'tatou', 'tatty', 'taunt', 'taupe', 'tauts', 'tawny', 'tawse', 'taxer', 'taxes', 'taxis', 'taxon', 'taxus', 'tayra', 'teach', 'teaks', 'teals', 'teams', 'tears', 'teary', 'tease', 'teats', 'tebet', 'techy', 'teddy', 'teems', 'teens', 'teeny', 'teeth', 'teffs', 'teiid', 'telex', 'tells', 'telly', 'tempo', 'temps', 'tempt', 'tench', 'tends', 'tenet', 'tenia', 'tenno', 'tenon', 'tenor', 'tense', 'tenth', 'tents', 'tepal', 'tepee', 'tepid', 'teras', 'terce', 'teres', 'terms', 'terns', 'terry', 'terse', 'tesla', 'testa', 'tests', 'testy', 'teths', 'teton', 'tetra', 'texan', 'texas', 'texts', 'thane', 'thank', 'thats', 'thaws', 'theca', 'theft', 'theme', 'thens', 'there', 'therm', 'theta', 'thick', 'thief', 'thigh', 'thill', 'thing', 'think', 'thins', 'third', 'thole', 'thong', 'thorn', 'three', 'thrip', 'throb', 'throe', 'throw', 'thrum', 'thuds', 'thugs', 'thuja', 'thule', 'thumb', 'thump', 'thyme', 'tiara', 'tiber', 'tibet', 'tibia', 'tical', 'ticks', 'tidal', 'tides', 'tiers', 'tiffs', 'tifli', 'tiger', 'tight', 'tigon', 'tikes', 'tilde', 'tiled', 'tiler', 'tiles', 'tilia', 'tills', 'tilth', 'tilts', 'timed', 'timer', 'times', 'timid', 'timor', 'tinct', 'tinea', 'tined', 'tines', 'tinge', 'tings', 'tinny', 'tints', 'tipis', 'tippy', 'tipsy', 'tired', 'tires', 'titan', 'titer', 'tithe', 'titis', 'title', 'titre', 'titty', 'titus', 'tizzy', 'toads', 'toady', 'toast', 'today', 'toddy', 'todea', 'todus', 'toffs', 'toffy', 'tokay', 'token', 'tokes', 'tokyo', 'toles', 'tolls', 'tombs', 'tomes', 'tonal', 'toned', 'toner', 'tones', 'tonga', 'tongs', 'tonic', 'tonne', 'tonus', 'tools', 'toona', 'toons', 'tooth', 'topaz', 'topee', 'toper', 'topes', 'topic', 'topis', 'topos', 'toque', 'torah', 'torch', 'tores', 'torsk', 'torso', 'torte', 'torts', 'torus', 'total', 'totem', 'toter', 'totes', 'touch', 'tough', 'tours', 'touts', 'towel', 'tower', 'towns', 'towny', 'toxic', 'toxin', 'toyon', 'trace', 'track', 'tract', 'tracy', 'trade', 'trail', 'train', 'trait', 'tramp', 'trams', 'trapa', 'trash', 'trave', 'trawl', 'trays', 'tread', 'treat', 'treed', 'trees', 'treks', 'trema', 'trend', 'trent', 'tress', 'trews', 'treys', 'triad', 'trial', 'tribe', 'trice', 'trick', 'tried', 'trier', 'tries', 'triga', 'trigs', 'trike', 'trill', 'trims', 'trine', 'tripe', 'trips', 'trite', 'troat', 'troll', 'troop', 'trope', 'troth', 'trots', 'trout', 'trove', 'troys', 'truce', 'truck', 'trues', 'truly', 'trump', 'trunk', 'truss', 'trust', 'truth', 'tryst', 'tsars', 'tsine', 'tsuga', 'tubal', 'tubas', 'tubby', 'tubed', 'tuber', 'tucks', 'tudor', 'tufas', 'tuffs', 'tufts', 'tulip', 'tulle', 'tulsa', 'tumid', 'tummy', 'tumor', 'tunas', 'tuner', 'tunes', 'tunga', 'tungs', 'tunic', 'tunis', 'tunny', 'tupek', 'tupik', 'turds', 'turfs', 'turki', 'turks', 'turns', 'turps', 'tushs', 'tusks', 'tutee', 'tutor', 'tuxes', 'tuxub', 'twain', 'twang', 'twats', 'tweak', 'tweed', 'tweet', 'twerp', 'twice', 'twigs', 'twill', 'twine', 'twins', 'twirl', 'twirp', 'twist', 'twits', 'tyche', 'tying', 'tykes', 'tyler', 'tynes', 'types', 'typha', 'typic', 'typos', 'tyres', 'tyros', 'tzars', 'udder', 'uglis', 'ugric', 'uigur', 'ukase', 'ulama', 'ulcer', 'ulema', 'ulmus', 'ulnar', 'ulnas', 'ultra', 'ulvas', 'umbel', 'umber', 'umbos', 'umbra', 'unais', 'unarm', 'unary', 'unaus', 'unbar', 'unbox', 'uncle', 'uncos', 'uncus', 'uncut', 'under', 'undue', 'unfed', 'unfit', 'uniat', 'unify', 'union', 'unite', 'units', 'unity', 'unlax', 'unlit', 'unman', 'unpin', 'unsay', 'unsex', 'untie', 'until', 'unwed', 'unzip', 'upend', 'upper', 'upset', 'upupa', 'urate', 'urban', 'ureas', 'urges', 'uriah', 'urial', 'urine', 'ursus', 'usage', 'users', 'ushas', 'usher', 'using', 'usnea', 'usual', 'usurp', 'usury', 'uteri', 'utile', 'utter', 'uveal', 'uveas', 'uvula', 'uzbak', 'uzbeg', 'uzbek', 'vagal', 'vague', 'vagus', 'vajra', 'vales', 'valet', 'valid', 'valmy', 'valor', 'valse', 'value', 'valve', 'vamps', 'vanda', 'vaned', 'vanes', 'vanir', 'vapid', 'vapor', 'varan', 'varix', 'varna', 'varus', 'vases', 'vasts', 'vatic', 'vault', 'vaunt', 'veals', 'vedic', 'veers', 'veery', 'vegan', 'veils', 'veins', 'velar', 'velds', 'veldt', 'velum', 'venal', 'vends', 'venom', 'vents', 'venue', 'venus', 'vepse', 'verbs', 'verdi', 'verge', 'verpa', 'verse', 'verso', 'verst', 'vertu', 'verve', 'vespa', 'vesta', 'vests', 'vetch', 'vexed', 'vexer', 'vexes', 'vials', 'viand', 'vibes', 'vicar', 'vices', 'vichy', 'vicia', 'video', 'vidua', 'views', 'vigil', 'vigor', 'villa', 'vinca', 'vines', 'vinos', 'vinyl', 'viola', 'viols', 'viper', 'viral', 'vireo', 'virga', 'virgo', 'virtu', 'virus', 'visas', 'vises', 'visit', 'visod', 'visor', 'vista', 'vital', 'vitis', 'vivas', 'vivid', 'vixen', 'vizor', 'vocal', 'vodka', 'vogue', 'vogul', 'voice', 'voids', 'voile', 'volar', 'voles', 'volga', 'volta', 'volts', 'volva', 'vomer', 'vomit', 'voter', 'votes', 'vouch', 'vouge', 'vowel', 'vower', 'vroom', 'vulva', 'wacky', 'wader', 'wades', 'wadis', 'wafer', 'wafts', 'wager', 'wages', 'wagon', 'wahoo', 'waifs', 'wails', 'wains', 'waist', 'waits', 'waive', 'waken', 'waker', 'wakes', 'wales', 'walks', 'walls', 'wally', 'waltz', 'wands', 'wanes', 'wanly', 'wants', 'wapmo', 'wards', 'warms', 'warns', 'warps', 'warts', 'warty', 'washy', 'wasps', 'waste', 'watch', 'water', 'watts', 'waugh', 'wauls', 'waver', 'wawls', 'waxed', 'waxen', 'waxes', 'wayne', 'weald', 'weals', 'weans', 'wears', 'weary', 'weave', 'webby', 'weber', 'wedel', 'wedge', 'weeds', 'weedy', 'weeks', 'weeny', 'weeps', 'weepy', 'wefts', 'weigh', 'weird', 'weirs', 'wekas', 'welch', 'welds', 'wells', 'welsh', 'welts', 'wench', 'wends', 'wests', 'whack', 'whale', 'whams', 'whang', 'whaps', 'wharf', 'whats', 'wheal', 'wheat', 'wheel', 'whelk', 'whelm', 'whelp', 'whets', 'wheys', 'whiff', 'whigs', 'while', 'whims', 'whine', 'whins', 'whiny', 'whirl', 'whirr', 'whirs', 'whish', 'whisk', 'whist', 'white', 'whits', 'whizz', 'whole', 'whomp', 'whoop', 'whops', 'whore', 'whorl', 'whose', 'wicca', 'wicks', 'widen', 'wides', 'widow', 'width', 'wield', 'wifes', 'wight', 'wilds', 'wiles', 'wince', 'winch', 'winds', 'windy', 'wines', 'winey', 'wings', 'winks', 'wiper', 'wipes', 'wired', 'wirer', 'wires', 'wises', 'wisps', 'witty', 'wizen', 'woads', 'woden', 'wolfs', 'wolof', 'woman', 'wombs', 'wonky', 'wonts', 'woods', 'woody', 'wooer', 'woofs', 'woolf', 'wools', 'wooly', 'woosh', 'woozy', 'words', 'wordy', 'works', 'world', 'wormy', 'worry', 'worse', 'worst', 'worth', 'worts', 'wospy', 'wound', 'woven', 'wrack', 'wraps', 'wrath', 'wrawl', 'wreak', 'wreck', 'wrest', 'wrick', 'wries', 'wring', 'wrist', 'write', 'writs', 'wrong', 'wroth', 'wryly', 'xenon', 'xeric', 'xerox', 'xviii', 'xxiii', 'xylem', 'xylol', 'xyris', 'yacca', 'yacht', 'yacks', 'yagis', 'yahoo', 'yakut', 'yanan', 'yangs', 'yanks', 'yards', 'yarns', 'yaups', 'yawls', 'yawns', 'yawps', 'yazoo', 'yearn', 'years', 'yeast', 'yells', 'yelps', 'yemen', 'yenta', 'yeses', 'yetis', 'yield', 'ylems', 'yobbo', 'yodel', 'yodhs', 'yogic', 'yogis', 'yokel', 'yokes', 'yolks', 'yores', 'young', 'youth', 'yowls', 'yquem', 'yuans', 'yucca', 'yucky', 'yukon', 'yules', 'yuman', 'yummy', 'yurts', 'yussa', 'zaire', 'zakat', 'zaman', 'zamia', 'zapus', 'zarfs', 'zayin', 'zeals', 'zebra', 'zensu', 'zeros', 'zests', 'zesty', 'zetas', 'zilch', 'zills', 'zincs', 'zings', 'zippy', 'zitis', 'zloty', 'zombi', 'zonal', 'zones', 'zooid', 'zooms', 'zoril', 'zunis']
 
-arr_words_5l = np.array([list(w) for w in word_list])
-df_words_5l = pd.DataFrame(data=arr_words_5l,
-                           columns=[f'letter_{i+1}' for i in range(5)])
+import random
 
-df_words_5l['word'] = word_list
-class Game:
-    
-    def __init__(self, df_all_5l_words):
-        
-        # Start with whole alphabet as list of possible letters in word
-        self.possible_letters = list(string.ascii_uppercase)
-        
-        # To store guessed letters that are correct, but in the wrong location
-        self.dict_misplaced_letters = Counter()
-        
-        # Possible answers
-        self.df_possible_5l_words = df_all_5l_words.copy(deep=True)
-        
-        # Dictionary of answers, initialised as empty
-        self.dict_letters = defaultdict(str)
-        for i in range(5):
-            self.dict_letters[i+1] = None
-        
-        # Initialise dictionary of letter counts at each position, updated as we play the game
-        self.dict_letter_counts = defaultdict(str)
-        for i in range(5):
-            self.dict_letter_counts[i+1] = Counter(df_all_5l_words[f'letter_{i+1}'])
-        
+def calculate_letter_frequencies(possible_words):
+    """Calculate the frequency of each letter in the possible words."""
+    letter_count = Counter()
+    for word in possible_words:
+        letter_count.update(word)
+    return letter_count
 
-    def calculate_freq_score(self, letters: str) -> int:
-        '''
-        Based on a set of letters, sum their frequency score at each position.
-        e.g. If we have 1,000 possible 5 letter words, and we look at the word
-        STAGE - if S appears as the first letter of 300 words in the 1,000, then
-        S gets a score of 300.
-        
-        Applying this logic to all letters in the word provides a frequency score,
-        with the idea that a high word score implies that the word contains frequently
-        occurring letters (relative to the possible 5 letter words) - and is therefore a 
-        good word for our next guess.
-        
-        :param letters: 5 character string, case insensitive
-        :returns: a frequency score (int) for the word as defined above.
-        '''
-        
-        letters = re.sub('^A-Z', '', letters.upper())
-        assert len(letters) == 5, 'Word must be 5 characters long'
-        score = 0
-        for i, l in enumerate(list(letters.upper())):
-            score += self.dict_letter_counts[i+1][l]
-            
-        return score
-        
-    
-    def guess(self):
-        '''
-        Given a game state, returns a dataframe of possible 5 letter words (through self.df_possible_5l_words)
-        ordered by the highest frequency score descending. Frequency score is calculated using 
-        the self.calculate_freq_score() method, vectorized for performance.
-        
-        :returns: self.df_possible_5l_words, ordered by freq_score descending
-        '''
-        
-        # First, reset letter counts
-        for i in range(5):
-            self.dict_letter_counts[i+1] = Counter(self.df_possible_5l_words[f'letter_{i+1}'])
-        
-        # Vectorize frequency score function to make it run faster
-        vect_calculate_freq_score = np.vectorize(self.calculate_freq_score)
-        
-        self.df_possible_5l_words['freq_score'] = vect_calculate_freq_score(self.df_possible_5l_words['word'])
-        
-        self.df_possible_5l_words = self.df_possible_5l_words.sort_values(by='freq_score', ascending=False)
-        return self.df_possible_5l_words
-    
-    
-    def check_misplaced_letters(self, word: str) -> bool:
-        '''
-        Allows us to filter dataframe of possible words containing at least the misplaced letters.
-        
-        e.g. If I guess 'GREET', and the 3rd  E is green, I filter the dataframe of possible words
-        for position 3 == "E". But if the 4th E is yellow, I also want to filter the possible words for 
-        any where E falls in the 1st, 2nd, or 5th spots.
-        
-        We would first filter for position 4 != "E" (done in the self.update() method), then for a given word - 
-        check that the count of the letter "E" was >=1 outside of position 3.
-        
-        :param word: 5 character string, case insensitive
-        :returns: a boolean, where True implies that the word has AT LEAST the letters contained in 
-        self.dict_misplaced_letters (e.g. 2 "E"s outside of position 3 in the above example would be acceptable).
-        '''
-        
-        word = re.sub(r'[^A-Z]', '', word.upper())
-        assert len(word) == 5, 'Word must be 5 characters long'
-        
-        # Break into letters
-        list_word = list(word)
-        
-        # Get indices (1 indexed) of positions that have not yet been solved
-        not_solved = [key for key, value in self.dict_letters.items() if value is None]
-        
-        # Filter list of words for those not yet solved, removing 1 from the index as our letters are 1 indexed
-        list_word_unsolved = [list_word[i-1] for i in not_solved]
-        
-        # Check counts
-        dict_count_letters = Counter(list_word_unsolved)
-        
-        # Compare to dictionary of misplaced letters
-        valid = True
-        for check_key, check_value in self.dict_misplaced_letters.items():
-            if dict_count_letters[check_key] < check_value:
-                valid = False
-                
-        return valid
-        
-    
-    def update(self, guess: str, results: list):
-        '''
-        Takes a 5 letter guess as a string, and a list of results in the format:
-        0 - incorrect
-        1 - right letter, wrong place (known as misplaced)
-        2 - right letter, right place (known as correct)
-        
-        Updates the game states:
-        - self.df_possible_5l_words: list of possible 5 letter word answers
-        - self.dict_misplaced_letters: Counter dictionary of misplaced letters, and how many there 
-          are in the target word.
-        - self.dict_letters: dictionary of the correct letter at each position (starts out with NULL values)
-        - self.possible_letters: letters of the alphabet that we can still use for guesses
-        
-        Doesn't return anything.
-        
-        :param guess: 5 character string, case insensitive
-        :param results: 5 item list containing only ints of the values 0, 1, or 2 indicating whether the guess
-        was correct (2), misplaced (1), or incorrect(0) at each corresponding position
-        '''
-        
+def get_next_guess(guess_history, evaluation_history):
+    """Determine the next guess based on guess history and feedback."""
+    possible_words = set(WORD_LIST)  # Start with all possible words
 
-        guess = re.sub(r'[^A-Z]', '', guess.upper())
-        assert len(guess) == 5, 'Guess must be 5 characters long'
-        assert len(results) == 5, 'Results list must contain 5 items'
-        assert all([n in [-1,0,1,2] for n in results]), 'Results list must only contain ints 0, 1, or 2'
-        
-        # Convert guess into list of letters
-        list_guess = list(guess.upper())
-        
-        # Zip with results
-        df_guess_results = pd.DataFrame(data=list(zip(list_guess, results)),
-                                        columns=['letter', 'result'],
-                                        index=np.arange(1,6))
-        
-        # To prevent iterating through already solved letters
-        already_solved = [key for key, value in self.dict_letters.items() if value is not None]
-        
-
-        # Update correct answers
-        df_corr_answers = df_guess_results.query('result==2')
-        if df_corr_answers.shape[0] > 0:
-            for idx, row in df_corr_answers.iterrows():
-                
-                # Prevent updates for previously solved letters
-                if idx in already_solved:
-                    pass
-                else:
-                    corr_letter = row['letter']
-                    self.dict_letters[idx] = corr_letter
-                
-                    # If correct letter was previously guessed as a misplaced letter, remove it
-                    if corr_letter in self.dict_misplaced_letters.keys():
-                        self.dict_misplaced_letters[corr_letter] -= 1
-                        
-                    # And filter dataframe of possible words
-                    self.df_possible_5l_words = self.df_possible_5l_words.query(f'letter_{idx}=="{corr_letter}"')
-
-                    if self.df_possible_5l_words.empty:
-                        print("Filtered DataFrame is empty after removing correct letters.")
-                        return
-
-
-          
-        # Add misplaced letters to our list, if it's a new letter
-        df_mispl_answers = df_guess_results.query('result==1')
-        if df_mispl_answers.shape[0] > 0:
-            
-            # Filter dataframe to remove any words that have the misplaced letter in that column
-            for idx, row in df_mispl_answers.iterrows():
-                mispl_letter = row['letter']
-                self.df_possible_5l_words = self.df_possible_5l_words.query(f'letter_{idx}!="{mispl_letter}"')  
-            
-            # Check how many we have of each letter that's misplaced
-            guess_mispl_letters = df_mispl_answers['letter'].values
-            dict_guess_mispl_letters = Counter(guess_mispl_letters)
-            
-            # Then update our dictionary of misplaced letters
-            for key, value in dict_guess_mispl_letters.items():
-                self.dict_misplaced_letters[key] = value   
-            
-            # Filter dataframe for words containing at least the count of the misplaced letters
-            vect_check_misplaced_letters = np.vectorize(self.check_misplaced_letters)
-            self.df_possible_5l_words['valid'] = vect_check_misplaced_letters(self.df_possible_5l_words['word'])
-            self.df_possible_5l_words = self.df_possible_5l_words.query('valid == True')
-            self.df_possible_5l_words = self.df_possible_5l_words.drop('valid', axis=1)    
-        
-        
-        # Remove any incorrect letters from the list to guess from, if letter isn't in misplaced list
-        df_wrong_answers = df_guess_results.query('result==0')
-        if df_wrong_answers.shape[0] > 0:
-            
-            # Ensure we don't double count
-            for l in df_wrong_answers['letter'].unique():
-                if self.dict_misplaced_letters[l] == 0:
-                    self.possible_letters.remove(l)
-                
-                
-        # Finally, update list of possible 5 letter words by removing all rows where
-        # for letters yet to be guessed, they don't fall in the list of possible letters
-        yet_to_solve = [key for key, value in self.dict_letters.items() if value is None]
-        for position in yet_to_solve:
-            print(f"Available columns: {self.df_possible_5l_words.columns}")
-            print(f"Updating position: {position}")
-
-            # Check all letters in a given position
-            position_letters = self.df_possible_5l_words[f'letter_{position}']
-            
-            # Return a boolean list of whether that list is in the possible values or not
-            position_in_possible_letters = [l in self.possible_letters for l in position_letters]
-            
-            # Filter
-            self.df_possible_5l_words = self.df_possible_5l_words[position_in_possible_letters].copy(deep=True)
-
-def evaluate_possible_words(guess_history, evaluation_history, words_df, game: Game):
-    # Update the game state for each guess
+    # Filter possible words based on feedback from previous guesses
     for guess, evaluation in zip(guess_history, evaluation_history):
-        # Convert evaluation history symbols to the expected format for `update`
-        results = []
-        for result in evaluation:
-            if result == 'O':
-                results.append(2)  # correct letter, right place
-            elif result == 'X':
-                results.append(1)  # correct letter, wrong place
-            elif result == '-':
-                results.append(0)  # incorrect letter
-            elif result == '?':
-                results.append(-1) 
-        # Update the Game state with the guess and evaluation results
-        game.update(guess, results)
+        for i, feedback in enumerate(evaluation):
+            if feedback == 'O':
+                # The letter is in the correct position
+                possible_words = {word for word in possible_words if word[i] == guess[i]}
+            elif feedback == 'X':
+                # The letter is in the word but not in the correct position
+                possible_words = {word for word in possible_words if guess[i] in word and word[i] != guess[i]}
+            elif feedback == '-':
+                # The letter is not in the word
+                possible_words = {word for word in possible_words if guess[i] not in word}
+
+    if not possible_words:
+        # If no possible words remain, fallback to a random guess
+        return random.choice(WORD_LIST)
+
+    # Calculate letter frequencies to prioritize the next guess
+    letter_frequencies = calculate_letter_frequencies(possible_words)
+
+    # Sort possible words by the sum of their letter frequencies
+    sorted_words = sorted(possible_words, key=lambda word: sum(letter_frequencies[letter] for letter in set(word)), reverse=True)
     
-    # Use the `guess` method to return the best next guess based on frequency scoring
-    sorted_words = game.guess()
-    
-    return sorted_words
+    return sorted_words[0]  # Return the best guess based on frequencies
 
 @app.route('/wordle-game', methods=['POST'])
 def wordle_game():
-    if request.is_json:
-        data = request.get_json()
-        
-        # Initialize the Game object with the full word list DataFrame
-        game = Game(df_words_5l)
-        print(game.df_possible_5l_words.head())
-        
-        if len(data['guessHistory']) == 0:
-            # First guess
-            guess = "stare"
-        else:
-            guess_history = data['guessHistory']
-            evaluation_history = data['evaluationHistory']
-            possible_words = evaluate_possible_words(guess_history, evaluation_history, df_words_5l, game)
-            
-            if len(possible_words) == 0:
-                guess = "error"
-            else:
-                guess = possible_words.iloc[0]['word']  # Get the top word based on score
+    """API endpoint for Wordle game."""
+    try:
+        data = request.json
+        guess_history = data.get("guessHistory", [])
+        evaluation_history = data.get("evaluationHistory", [])
 
-        response = {
-            "guess": guess
-        }
-        return jsonify(response), 200
-    else:
-        return jsonify({"error": "Invalid request format"}), 400
+        next_guess = get_next_guess(guess_history, evaluation_history)
+        return jsonify({"guess": next_guess})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

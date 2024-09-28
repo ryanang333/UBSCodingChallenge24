@@ -51,8 +51,8 @@ def get_ctfed():
             "password": "PASSWORD_HERE"
         },
         "pictureSteganography": {
-            "flagOne": "UB5-1{1_am_d3f_n0t_old}",
-            "flagTwo": "UB5-2{1amlik3n3w}"
+            "flagOne": "UB5-1{FLAG_ONE_CONTENTS_HERE}",
+            "flagTwo": "UB5-2{FLAG_TWO_CONTENTS_HERE}"
         },
         "reverseEngineeringTheDeal": {
             "flag": "FLAG_CONTENT_HERE",
@@ -211,7 +211,14 @@ def map_to_board(char_map, rows, cols):
 
 
 
-word_list =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abate', 
+import random
+from collections import defaultdict
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# This could be replaced with a more extensive list of possible words.
+WORD_LIST =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abate', 
 'abbot', 'abele', 'abets', 'abhor', 'abide', 'abies', 'ables', 'abode', 'abohm', 'abort', 'about',
 'above', 'abuse', 'abuts', 'abuzz', 'abyes', 'abysm', 'abyss', 'accra', 
 'acerb', 'acids', 'ackee', 'acmes', 'acned', 'acnes', 'acold', 'acorn', 'acres', 
@@ -258,63 +265,60 @@ word_list =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abat
 'latin', 'latke', 'laugh', 'lavas', 'laver', 'laves', 'lawns', 'laxly', 'layer', 'layia', 'layup', 'lazar', 'lazes', 'leach', 'leads', 'leafs', 'leafy', 'leaks', 'leaky', 'leans', 'leaps', 'learn', 'lears', 'leary', 'lease', 'leash', 'least', 'leave', 'ledge', 'ledum', 'leech', 'leeds', 'leeks', 'leers', 'leery', 'lefts', 'lefty', 'legal', 'leger', 'leggy', 'leigh', 'lemma', 'lemna', 'lemon', 'lemur', 'lends', 'lenin', 'lense', 'lento', 'leone', 'lepas', 'leper', 'leppy', 'lepus', 'lerot', 'letch', 'lethe', 'letup', 'levee', 'level', 'lever', 'levis', 'lewis', 'lexis', 'liana', 'liars', 'libby', 'libel', 'libra', 'libya', 'lichi', 'licit', 'licks', 'lidar', 'lidos', 'liege', 'liens', 'lifer', 'lifts', 'ligan', 'liger', 'light', 'ligne', 'liked', 'liken', 'likes', 'lilac', 'lilts', 'liman', 'limas', 'limax', 'limbo', 'limbs', 'limen', 'limey', 'limit', 'limns', 'limos', 'limps', 'linac', 'lindy', 'lined', 'linen', 'liner', 'lingo', 'lings', 'linin', 'links', 'linos', 'lints', 'linum', 'lipid', 'liras', 'lisle', 'lisps', 'liszt', 'litas', 'liter', 'lites', 'lithe', 'litre', 'liven', 'liver', 'livid', 'llama', 'llano', 'lloyd', 'loach', 'loads', 'loafs', 'loams', 'loamy', 'loans', 'loasa', 'loath', 'lobar', 'lobby', 'lobed', 'lobes', 'local', 'lochs', 'locks', 'locos', 'locum', 'locus', 'lodes', 'lodge', 'loess', 'lofts', 'lofty', 'logan', 'loges', 'logic', 'logos', 'lohan', 'loins', 'lolls', 'lolly', 'loner', 'loofa', 'looks', 'looms', 'loons', 'loony', 'loops', 'loopy', 'loose', 'loots', 'lopes', 'loren', 'lores', 'lorry', 'loser', 'loses', 'lossy', 'lotas', 'lotic', 'lotte', 'lotto', 'lotus', 'lough', 'louis', 'loupe', 'lours', 'louse', 'lousy', 'louts', 'loved', 'lover', 'loves', 'lowan', 'lower', 'lowly', 'lowry', 'loxes', 'loxia', 'loyal', 'luaus', 'lubes', 'lucid', 'lucks', 'lucky', 'lucre', 'luffa', 'luffs', 'luger', 'luges', 'lulay', 'lulls', 'lully', 'lumen', 'lumps', 'lumpy', 'lunar', 'lunas', 'lunch', 'lunda', 'lunge', 'lungi', 'lungs', 'lunts', 'lupin', 'lupus', 'lurch', 'lures', 'lurid', 'lurks', 'lusts', 'lusty', 'lutes', 'lutra', 'luxes', 'lycee', 'lydia', 'lygus', 'lying', 'lymph', 'lynch', 'lyres', 'lyric', 'lysin', 'lysis', 'lysol', 'lyssa', 'maars', 'macao', 'macaw', 'macer', 'maces', 'macho', 'machs', 'macks', 'macon', 'macro', 'madam', 'madia', 'madly', 'mafia', 'magic', 'magma', 'magus', 'mahdi', 'mahoe', 'maids', 'maidu', 'mails', 'maims', 'maine', 'maize', 'majas', 'major', 'maker', 'makes', 'makos', 'malar', 'malay', 'maleo', 'males', 'malik', 'malls', 'malta', 'malto', 'malts', 'malus', 'malva', 'mamas', 'mamba', 'mambo', 'mamey', 'mamma', 'mammy', 'mande', 'manes', 'manet', 'manga', 'mange', 'mango', 'mangy', 'mania', 'manic', 'manis', 'manky', 'manly', 'manna', 'manor', 'manse', 'manta', 'manul', 'manus', 'maori', 'maple', 'mapra', 'maras', 'march', 'marcs', 'mares', 'marge', 'maria', 'marks', 'marls', 'marly', 'marry', 'marsh', 'marts', 'masai', 'maser', 'masks', 'mason', 'masse', 'masts', 'matai', 'match', 'mated', 'mater', 'mates', 'matey', 'maths', 'matte', 'matts', 'matzo', 'mauls', 'maund', 'mauve', 'maven', 'mavin', 'mavis', 'maxim', 'maxis', 'mayan', 'mayas', 'maybe', 'mayer', 'mayor', 'mazed', 'mazer', 'mazes', 'meals', 'mealy', 'means', 'meany', 'meats', 'meaty', 'mecca', 'medal', 'medea', 'medic', 'medoc', 'meeds', 'meeks', 'meets', 'melba', 'melds', 'melee', 'meles', 'melia', 'melon', 'melts', 'memos', 'mends', 'mensa', 'menus', 'meows', 'mercy', 'meres', 'merge', 'merit', 'merle', 'merls', 'merry', 'mesas', 'mesic', 'meson', 'messy', 'mesua', 'metal', 'meter', 'metes', 'metic', 'metis', 'metre', 'metro', 'meuse', 'mewls', 'mezzo', 'miami', 'miaou', 'miaow', 'miasm', 'miaul', 'micah', 'micas', 'micks', 'micro', 'midas', 'middy', 'midge', 'midis', 'midst', 'miens', 'miffs', 'might', 'mikes', 'milan', 'milch', 'miler', 'milks', 'milky', 'mills', 'milts', 'milya', 'mimeo', 'mimer', 'mimes', 'mimic', 'mimir', 'mimus', 'minah', 'minas', 'mince', 'minds', 'mined', 'miner', 'mines', 'minge', 'mingy', 'minim', 'minis', 'minks', 'minor', 'minos', 'mints', 'minty', 'minus', 'mired', 'mires', 'mirid', 'mirky', 'mirth', 'misdo', 'miser', 'misos', 'missy', 'mists', 'misty', 'miter', 'mites', 'mitra', 'mitre', 'mitts', 'mixed', 'mixer', 'mixes', 'mizen', 'mnium', 'moans', 'moats', 'mocha', 'mocks', 'modal', 'model', 'modem', 'modes', 'mogul', 'mohos', 'moils', 'moire', 'moist', 'mojdi', 'mojos', 'mokes', 'molal', 'molar', 'molas', 'molds', 'moldy', 'moles', 'molle', 'molls', 'molly', 'molto', 'molts', 'momma', 'mommy', 'momus', 'monad', 'monal', 'monas', 'money', 'mongo', 'monks', 'monos', 'monte', 'month', 'mooch', 'moods', 'moody', 'moong', 'moons', 'moony', 'moore', 'moors', 'moose', 'moots', 'moped', 'mopes', 'moral', 'moray', 'morel', 'mores', 'morns', 'moron', 'morph', 'morse', 'morus', 'mosan', 'moses', 'mosey', 'mossy', 'mosts', 'mosul', 'motel', 'motes', 'motet', 'moths', 'mothy', 'motif', 'motor', 'motto', 'motts', 'mould', 'moult', 'mound', 'mount', 'mourn', 'mouse', 'mousy', 'mouth', 'moved', 'mover', 'moves', 'movie', 'mower', 'moxie', 'mucin', 'mucks', 'mucky', 'mucor', 'mucus', 'muddy', 'mudra', 'muffs', 'mufti', 'muggy', 'mugil', 'mujik', 'mulch', 'mulct', 'mules', 'mulla', 'mulls', 'mummy', 'mumps', 'munch', 'munda', 'muons', 'mural', 'murks', 'murky', 'murre', 'musca', 'musci', 'muser', 'muses', 'musgu', 'mushy', 'music', 'musks', 'musky', 'mussy', 'musth', 'musts', 'musty', 'muted', 'mutes', 'mutts', 'muzzy', 'mylar', 'mynah', 'mynas', 'myoid', 'myoma', 'myope', 'myrrh', 'mysis', 'myths', 'nabob', 'nacho', 'nacom', 'nacre', 'nadir', 'nahum', 'naiad', 'naias', 'naifs', 'nails', 'naira', 'naive', 'naked', 'namer', 'names', 'nance', 'nancy', 'nandu', 'nanny', 'naomi', 'napes', 'nappy', 'narcs', 'nards', 'naris', 'narks', 'nasal', 'nasty', 'nasua', 'natal', 'nates', 'natty', 'nauch', 'naval',
 'navel', 'naves', 'navvy', 'nawab', 'nazis', 'neaps', 'nears', 'neats', 'necks', 'needs', 'needy', 'neems', 'negro', 'negus', 'nehru', 'neigh', 'neons', 'nepal', 'nerds', 'nerve', 'nervy', 'nests', 'netts', 'never', 'neves', 'nevus', 'newel', 'newly', 'newsy', 'newts', 'nexus', 'ngwee', 'niche', 'nicks', 'nidus', 'niece', 'nifty', 'nighs', 'night', 'nihil', 'nines', 'ninja', 'ninny', 'ninon', 'ninth', 'nintu', 'niobe', 'nipas', 'nippy', 'nisan', 'nisei', 'nisus', 'niter', 'nitid', 'nitre', 'nixon', 'nobel', 'noble', 'nobly', 'nocks', 'nodes', 'noels', 'noemi', 'noise', 'noisy', 'nomad', 'nomas', 'nomes', 'nonce', 'nones', 'nooks', 'nooky', 'noons', 'noose', 'nopal', 'noria', 'norma', 'norms', 'norse', 'north', 'nosed', 'noses', 'nosey', 'notch', 'noted', 'nouns', 'novas', 'novel', 'nubby', 'nubia', 'nucha', 'nudes', 'nudge', 'nukes', 'nulls', 'numbs', 'numen', 'numsi', 'nurse', 'nutty', 'nyala', 'nylon', 'nymph', 'nyssa', 'oaken', 'oakum', 'oasis', 'oasts', 'oaten', 'oaves', 'obeah', 'obese', 'obeys', 'obits', 'oboes', 'occur', 'ocean', 'ocher', 'ochna', 'ochre', 'octad', 'octal', 'octet', 'oddly', 'odist', 'odium', 'odors', 'odour', 'offal', 'offer', 'often', 'ogees', 'ogive', 'ogler', 'ogles', 'ogres', 'ohmic', 'oiled', 'oiler', 'oinks', 'okapi', 'okays', 'okehs', 'okras', 'olden', 'older', 'oldie', 'olein', 'oleos', 'olive', 'ollas', 'ology', 'omaha', 'omani', 'omega', 'omens', 'omits', 'onces', 'onion', 'onset', 'oomph', 'ootid', 'oozes', 'opahs', 'opals', 'opens', 'opera', 'opine', 'opium', 'opsin', 'optic', 'orach', 'orals', 'orang', 'orans', 'orate', 'orbit', 'orcas', 'order', 'oread', 'organ', 'oriel', 'orion', 'oriya', 'orlon', 'orlop', 'ormer', 'orpin', 'orris', 'oryza', 'osage', 'osaka', 'oscan', 'oscar', 'osier', 'other', 'otpaf', 'ottar', 'otter', 'ouija', 'ounce', 'ousel', 'ousts', 'outdo', 'outer', 'outgo', 'outre', 'ouzel', 'ouzos', 'ovals', 'ovary', 'ovate', 'ovens', 'overs', 'overt', 'ovine', 'ovoid', 'ovolo', 'ovule', 'owing', 'owlet', 'owned', 'owner', 'oxbow', 'oxeye', 'oxide', 'oxime', 'oxlip', 'ozena', 'ozone', 'pacas', 'pacer', 'paces', 'pacha', 'packs', 'pacts', 'padda', 'paddy', 'pader', 'padre', 'paean', 'pagan', 'pager', 'pages', 'pails', 'paine', 'pains', 'paint', 'paisa', 'palas', 'palau', 'palis', 'palls', 'pally', 'palms', 'palmy', 'palsy', 'panax', 'panda', 'panel', 'panes', 'panga', 'pangs', 'panic', 'pansy', 'panto', 'pants', 'panty', 'papal', 'papas', 'papaw', 'paper', 'papio', 'papua', 'paras', 'parch', 'parer', 'pares', 'paris', 'parka', 'parks', 'parky', 'parrs', 'parry', 'parse', 'parsi', 'parts', 'party', 'parus', 'parve', 'pasch', 'paseo', 'pasha', 'passe', 'pasta', 'paste', 'pasts', 'pasty', 'patas', 'patch', 'pater', 'pates', 'patio', 'patsy', 'patty', 'pause', 'pavan', 'paved', 'pavis', 'pawer', 'pawky', 'pawls', 'pawns', 'paxes', 'payee', 'payer', 'peace', 'peach', 'peags', 'peaks', 'peaky', 'peals', 'peans', 'pearl', 'peats', 'peaty', 'peavy', 'pecan', 'pecks', 'pecos', 'pedal', 'peeks', 'peels', 'peens', 'peeps', 'peers', 'peeve', 'pekan', 'pekes', 'pekoe', 'pelew', 'pelfs', 'pelts', 'penal', 'pengo', 'penis', 'penni', 'penny', 'peons', 'peony', 'peppy', 'pepsi', 'perca', 'perch', 'percy', 'peril', 'perks', 'perky', 'perms', 'perry', 'pesah', 'pesky', 'pesos', 'pests', 'petal', 'peter', 'petty', 'pewee', 'pewit', 'phage', 'phase', 'phial', 'phlox', 'phoca', 'phone', 'phons', 'phony', 'photo', 'phots', 'phyle', 'physa', 'piano', 'picas', 'picea', 'pichi', 'picks', 'picky', 'picot', 'picul', 'picus', 'piece', 'piers', 'pieta', 'piety', 'piggy', 'pigmy', 'pikas', 'pikes', 'pilaf', 'pilar', 'pilau', 'pilaw', 'pilea', 'piles', 'pilot', 'pilus', 'pimas', 'pimps', 'pinch', 'pings', 'pinko', 'pinks', 'pinky', 'pinna', 'pinny', 'pinon', 'pinot', 'pinto', 'pints', 'pinus', 'pious', 'pipal', 'piper', 'pipes', 'pipet', 'pipit', 'pipra', 'pique', 'piste', 'pisum', 'pitas', 'pitch', 'piths', 'pithy', 'piton', 'pitta', 'piute', 'pivot', 'pixel', 'pixes', 'pixie', 'pizza', 'place', 'plage', 'plaid', 'plain', 'plait', 'plane', 'plank', 'plans', 'plant', 'plash', 'plasm', 'plate', 'plato', 'plats', 'platy', 'plays', 'plaza', 'plead', 'pleat', 'plebe', 'plica', 'plier', 'pliny', 'ploce', 'plods', 'plonk', 'plops', 'plots', 'plows', 'ploys', 'pluck', 'plugs', 'plumb', 'plume', 'plump', 'plums', 'plumy', 'plunk', 'plush', 'pluto', 'plyer', 'poach', 'pocks', 'podgy', 'poems', 'poesy', 'poets', 'pogey', 'pogge', 'poilu', 'point', 'poise', 'poker', 'pokes', 'pokey', 'polar', 'poler', 'poles', 'polio', 'polka', 'polls', 'polyp', 'pomes', 'pommy', 'pomps', 'ponca', 'ponce', 'ponds', 'pones', 'pongo', 'pooch', 'poods', 'poons', 'poops', 'poove', 'popes', 'poppy', 'porch', 'pores', 'porgy', 'porks', 'porno', 'porns', 'porta', 'porte', 'porto', 'ports', 'posed', 'poser', 'poses', 'posit', 'posse', 'posts', 'potto', 'potty', 'pouch', 'poufs', 'pound', 'pours', 'pouts', 'power', 'poxes', 'poyou', 'prams', 'prang', 'prank', 'prate', 'prats', 'prawn', 'praya', 'prays', 'preen', 'preps', 'press', 'prexy', 'preys', 'priam', 'price', 'prick', 'pricy', 'pride', 'pries', 'prigs', 'prima', 'prime', 'primo', 'primp', 'prims', 'prink', 'print', 'prion', 'prior', 'prise', 'prism', 'privy', 'prize', 'probe', 'prods', 'profs', 'prole', 'promo', 'proms', 'prone', 'prong', 'proof', 'props', 'prose', 'prosy', 'proto', 'proud', 'prove', 'prowl', 'prows', 'proxy', 'prude', 'prune', 'psalm', 'pseud', 'psoas', 'pubes', 'pubic', 'pubis', 'puces', 'pucka', 'pucks', 'pudge', 'pudgy', 'puffs', 'puffy', 'pukes', 'pukka', 'pulas', 'pules', 'pulex', 'pulls', 'pulps', 'pulpy', 'pulse', 'pumas', 'pumps', 'punch', 'pungs', 'punic', 'punks', 'punky', 'punts', 'pupal', 'pupas', 'pupil', 'puppy', 'purau', 'puree', 'purge', 'purim', 'purls', 'purrs', 'purse', 'pursy', 'puses', 'pushy', 'pussy', 'putts', 'putty', 'pygmy', 'pylon', 'pyres', 'pyrex', 'pyrus', 'pyxes', 'pyxie', 'pyxis', 'qatar', 'qibla', 'qophs', 'quack', 'quads', 'quaff', 'quags', 'quail', 'quake', 'qualm', 'quark', 'quart', 'quash', 'quasi', 'quays', 'queen', 'queer', 'quell', 'quern', 'query', 'quest', 'queue', 'quick', 'quids', 'quiet', 'quiff', 'quill', 'quilt', 'quins', 'quint', 'quips', 'quipu', 'quira', 'quire', 'quirk', 'quirt', 'quite', 'quito', 'quits', 'quoin', 'quoit', 'quota', 'quote', 'rabat', 'rabbi', 'rabid', 'racer', 'racks', 'racon', 'radar', 'radio', 'radix', 'radon', 'rafts', 'ragee', 'rages', 'ragis', 'raids', 'rails', 'rainy', 'raise', 'rajab', 'rajah', 'rakes', 'rales', 'rally', 'ramee', 'ramie', 'ramps', 'ramus', 'ranch', 'rands', 'randy', 'ranee', 'range', 'rangy', 'ranid', 'ranis', 'ranks', 'rants', 'raped', 'raper', 'rapes', 'raphe', 'rapid', 'rases', 'rasps', 'raspy', 'ratan', 'ratch', 'ratel', 'rates', 'ratio', 'ratty', 'ravel', 'raven', 'raver', 'raves', 'rayon', 'razed', 'razes', 'razor', 'reach', 'react', 'reads', 'ready', 'realm', 'reams', 'reaps', 'rearm', 'rears', 'reata', 'reave', 'rebel', 'rebus', 'rebut', 'recap', 'recce', 'recco', 'reccy', 'recto', 'recur', 'redes', 'redly', 'redos', 'redox', 'redux', 'reeds', 'reedy', 'reefs', 'reefy', 'reeks', 'reels', 'reeve', 'refer', 'refit', 'regal', 'regur', 'reich', 'reify', 'reign', 'rejig', 'relax', 'relay', 'relic', 'remit', 'remus', 'renal', 'rends', 'renew', 'renin', 'rente', 'rents', 'repay', 'repel', 'reply', 'repot', 'repps', 'rerun', 'reset', 'resew', 'resid', 'resin', 'rests', 'retch', 'retem', 'retie', 'retro', 'retry', 'reuse', 'revel', 'revet', 'revue', 'rexes', 'rheas', 'rhein', 'rheum', 'rhine', 'rhino', 'rhomb', 'rhumb', 'rhyme', 'rials', 'riant', 'riata', 'ribes', 'ricer', 'rices', 'ricin', 'ricks', 'rider', 'rides', 'ridge', 'riels', 'riffs', 'rifle', 'rifts', 'rigel', 'right', 'rigid', 'rigor', 'riled', 'riles', 'riley', 'rills', 'rimas', 'rimed', 'rimes', 'rinds', 'rings', 'rinks', 'rinse', 'riots', 'ripen', 'ripes', 'risen', 'riser', 'risks', 'risky', 'rites', 'ritzy', 'rival', 'river', 'rives', 'rivet', 'riyal', 'roach', 'roads', 'roams', 'roans', 'roars', 'roast', 'robed', 'robes', 'robin', 'roble', 'robot', 'rocks', 'rocky', 'rodeo', 'rogue', 'roils', 'roily', 'roles', 'rollo', 'rolls', 'roman', 'romeo', 'romps', 'rondo', 'roods', 'roofs', 'roofy', 'rooks', 'rooms', 'roomy', 'roost', 'roots', 'roper', 'ropes', 'ropey', 'roses', 'rosin', 'rotas', 'rotes', 'rotls', 'rotor', 'roues', 'rouge', 'rough', 'round', 'rouse', 'route', 'routs', 'rover', 'roves', 'rowan', 'rowdy', 'rowel', 'rower', 'royal', 'rubes', 'rubia', 'ruble', 'rubor', 'rubus', 'rucks', 'rudds', 'ruddy', 'ruffs', 'rugby', 'ruins', 'ruled', 'ruler', 'rumba', 'rumen', 'rumex', 'rummy', 'rumor', 'rumps', 'runch', 'runes', 'rungs', 'runic', 'runny', 'runts', 'runty', 'rupee', 'rural', 'ruses', 'rushy', 'rusks', 'rusts', 'rusty', 'ruths', 'rutty', 'sabal', 'saber', 'sabin', 'sable', 'sabot', 'sabra', 'sabre', 'sacks', 'sades', 'sadhe', 'sadhu', 'sadly', 'safar', 'safes', 'sages', 'sagos', 'sahib', 'saids', 'saiga', 'sails', 'saint', 'sakes', 'sakis', 'sakti', 'salad', 'salal', 'salat', 'salem', 'sales', 'salix', 'sally', 'salmi', 'salmo', 'salol', 'salon', 'salpa', 'salps', 'salsa', 'salty', 'salve', 'salvo', 'saman', 'samba', 'samen', 'samoa', 'sands', 'sandy', 'sanes', 'santa', 'sapid',
 'sappy', 'sarah', 'saran', 'sards', 'saree', 'sarin', 'sassy', 'satan', 'sates', 'satin', 'satyr', 'sauce', 'saucy', 'saudi', 'sauls', 'sauna', 'saury', 'saute', 'saved', 'saver', 'saves', 'savin', 'savor', 'savoy', 'savvy', 'sawan', 'saxes', 'saxon', 'scabs', 'scads', 'scags', 'scald', 'scale', 'scalp', 'scaly', 'scamp', 'scams', 'scans', 'scant', 'scape', 'scare', 'scarf', 'scarp', 'scars', 'scary', 'scats', 'scaup', 'scend', 'scene', 'scent', 'schmo', 'schwa', 'scion', 'scoff', 'scoke', 'scold', 'scone', 'scoop', 'scoot', 'scope', 'score', 'scorn', 'scots', 'scott', 'scour', 'scout', 'scowl', 'scows', 'scrag', 'scram', 'scrap', 'scree', 'screw', 'scrim', 'scrip', 'scrod', 'scrub', 'scrum', 'scuba', 'scuds', 'scuff', 'scull', 'scums', 'scups', 'scurf', 'scute', 'scuts', 'seals', 'seams', 'seamy', 'sears', 'seats', 'sebum', 'sects', 'sedan', 'seder', 'sedge', 'sedgy', 'sedum', 'seeds', 'seedy', 'seeks', 'seels', 'seems', 'seeps', 'seers', 'segno', 'segue', 'seine', 'seism', 'seize', 'selfs', 'sells', 'selva', 'semen', 'sends', 'senna', 'senor', 'sense', 'sents', 'seoul', 'sepal', 'sepia', 'septs', 'serer', 'seres', 'serfs', 'serge', 'serif', 'serin', 'serow', 'serra', 'serum', 'serve', 'servo', 'seton', 'setup', 'seven', 'sever', 'sewed', 'sewer', 'sexed', 'sexes', 'sexts', 'sfebe', 'shack', 'shade', 'shads', 'shady', 'shaft', 'shags', 'shahs', 'shake', 'shako', 'shaky', 'shale', 'shame', 'shams', 'shang', 'shank', 'shape', 'shard', 'share', 'shari', 'shark', 'sharp', 'shave', 'shawl', 'shawm', 'shawn', 'shaws', 'sheaf', 'shear', 'sheds', 'sheen', 'sheep', 'sheer', 'sheet', 'sheik', 'shelf', 'shell', 'shema', 'sherd', 'shews', 'shiah', 'shies', 'shift', 'shill', 'shims', 'shina', 'shine', 'shins', 'shiny', 'ships', 'shire', 'shirk', 'shirr', 'shirt', 'shits', 'shiva', 'shivs', 'shlep', 'shoal', 'shoat', 'shock', 'shoed', 'shoes', 'shogi', 'shoji', 'shona', 'shook', 'shoos', 'shoot', 'shops', 'shore', 'shorn', 'short', 'shote', 'shots', 'shout', 'shove', 'shows', 'showy', 'shred', 'shrew', 'shrub', 'shrug', 'shuck', 'shuns', 'shunt', 'shush', 'shute', 'shuts', 'shyly', 'sials', 'sibyl', 'sicks', 'sides', 'sidle', 'siege', 'sieve', 'sifts', 'sighs', 'sight', 'sigma', 'signs', 'sikhs', 'silds', 'silex', 'silks', 'silky', 'sills', 'silly', 'silos', 'silts', 'silty', 'silva', 'simal', 'simas', 'simon', 'since', 'sines', 'sinew', 'singe', 'sings', 'sinks', 'sinus', 'sioux', 'siren', 'sires', 'siris', 'sirup', 'sisal', 'sises', 'sissu', 'sissy', 'sitar', 'sites', 'sitka', 'sitta', 'siums', 'sivan', 'siwan', 'sixer', 'sixes', 'sixth', 'sixty', 'sized', 'sizes', 'skags', 'skate', 'skeat', 'skeet', 'skegs', 'skein', 'skeps', 'skews', 'skids', 'skier', 'skies', 'skiff', 'skill', 'skimp', 'skims', 'skink', 'skins', 'skint', 'skips', 'skirl', 'skirt', 'skits', 'skive', 'skuas', 'skulk', 'skull', 'skunk', 'slabs', 'slack', 'slags', 'slain', 'slake', 'slams', 'slang', 'slant', 'slaps', 'slash', 'slask', 'slate', 'slats', 'slaty', 'slave', 'slavs', 'slaws', 'slays', 'sleds', 'sleek', 'sleep', 'sleet', 'slews', 'slice', 'slick', 'slide', 'slime', 'slims', 'slimy', 'sling', 'slink', 'slips', 'slits', 'slobs', 'sloes', 'slogs', 'sloop', 'slope', 'slops', 'slosh', 'sloth', 'slots', 'slows', 'slubs', 'slues', 'slugs', 'slump', 'slums', 'slurp', 'slurs', 'slush', 'sluts', 'slyly', 'smack', 'small', 'smarm', 'smart', 'smash', 'smear', 'smell', 'smelt', 'smews', 'smile', 'smirk', 'smite', 'smith', 'smock', 'smogs', 'smoke', 'smoky', 'smuts', 'snack', 'snafu', 'snags', 'snail', 'snake', 'snaky', 'snaps', 'snare', 'snarl', 'snead', 'sneak', 'sneer', 'snick', 'snide', 'sniff', 'snipe', 'snips', 'snits', 'snobs', 'snoek', 'snood', 'snook', 'snoop', 'snoot', 'snore', 'snort', 'snots', 'snout', 'snows', 'snowy', 'snubs', 'snuff', 'snugs', 'soaks', 'soaps', 'soapy', 'soars', 'soave', 'sober', 'socks', 'socle', 'sodas', 'soddy', 'sodom', 'sofas', 'sofia', 'softs', 'softy', 'soggy', 'soils', 'sojas', 'solan', 'solar', 'solea', 'soled', 'soles', 'solfa', 'solid', 'solon', 'solos', 'solve', 'somas', 'sonar', 'sones', 'songs', 'sonic', 'sonny', 'sonsy', 'sooth', 'soots', 'sooty', 'sophs', 'sopor', 'soppy', 'sorbs', 'sores', 'sorex', 'sorgo', 'sorry', 'sorts', 'sorus', 'sotho', 'sough', 'souls', 'sound', 'soups', 'soupy', 'sours', 'souse', 'south', 'sower', 'soyas', 'space', 'spacy', 'spade', 'spain', 'spall', 'spang', 'spank', 'spare', 'spark', 'spars', 'spasm', 'spate', 'spats', 'spawl', 'spawn', 'spays', 'speak', 'spear', 'speck', 'specs', 'speed', 'speer', 'spell', 'spelt', 'spend', 'spent', 'sperm', 'spews', 'spica', 'spice', 'spick', 'spics', 'spicy', 'spiel', 'spies', 'spiff', 'spike', 'spiks', 'spiky', 'spile', 'spill', 'spine', 'spins', 'spiny', 'spire', 'spirt', 'spite', 'spits', 'spitz', 'spivs', 'splat', 'splay', 'split', 'spock', 'spode', 'spoil', 'spoke', 'spoof', 'spook', 'spool', 'spoon', 'spoor', 'spore', 'sport', 'spots', 'spout', 'sprag', 'sprat', 'spray', 'spree', 'sprig', 'sprit', 'sprue', 'spuds', 'spues', 'spume', 'spumy', 'spunk', 'spurn', 'spurs', 'spurt', 'squab', 'squad', 'squat', 'squaw', 'squib', 'squid', 'stabs', 'stack', 'staff', 'stage', 'stags', 'stagy', 'staid', 'stain', 'stair', 'stake', 'stale', 'stalk', 'stall', 'stamp', 'stand', 'staph', 'stare', 'stark', 'starr', 'stars', 'start', 'stash', 'state', 'stave', 'stays', 'stead', 'steak', 'steal', 'steam', 'steed', 'steel', 'steen', 'steep', 'steer', 'stein', 'stela', 'stele', 'stems', 'stent', 'steps', 'stern', 'stets', 'stews', 'stick', 'sties', 'stiff', 'stile', 'still', 'stilt', 'sting', 'stink', 'stint', 'stipe', 'stirk', 'stirs', 'stoat', 'stobs', 'stock', 'stoep', 'stogy', 'stoic', 'stoke', 'stole', 'stoma', 'stomp', 'stone', 'stony', 'stool', 'stoop', 'stops', 'store', 'stork', 'storm', 'story', 'stoup', 'stout', 'stove', 'stows', 'strad', 'strap', 'straw', 'stray', 'strep', 'strew', 'stria', 'strip', 'strix', 'strop', 'strum', 'strut', 'stubs', 'stuck', 'studs', 'study', 'stuff', 'stump', 'stung', 'stuns', 'stunt', 'stupa', 'stupe', 'styes', 'style', 'stymy', 'suave', 'sucre', 'sudan', 'sudor', 'sudra', 'sudsy', 'suede', 'suers', 'suets', 'suety', 'sugar', 'sugis', 'suite', 'suits', 'sulfa', 'sulks', 'sulky', 'sulla', 'sully', 'sumac', 'sumos', 'sumps', 'sunna', 'sunni', 'sunny', 'sunup', 'suomi', 'super', 'supra', 'suras', 'surds', 'sures', 'surfs', 'surge', 'surly', 'surya', 'sushi', 'sutra', 'swabs', 'swage', 'swags', 'swain', 'swale', 'swami', 'swamp', 'swank', 'swans', 'swaps', 'sward', 'swarm', 'swart', 'swash', 'swath', 'sways', 'swazi', 'swear', 'sweat', 'swede', 'sweep', 'sweet', 'swell', 'swept', 'swift', 'swigs', 'swill', 'swims', 'swine', 'swing', 'swipe', 'swirl', 'swish', 'swiss', 'swobs', 'swoon', 'swoop', 'swops', 'sword', 'sworn', 'swosh', 'swots', 'sylph', 'sylva', 'syncs', 'synod', 'syria', 'syrup', 'tabby', 'tabes', 'tabis', 'table', 'taboo', 'tabor', 'tacca', 'tachs', 'tacit', 'tacks', 'tacky', 'tacos', 'tacts', 'taels', 'taffy', 'tagus', 'tails', 'taint', 'tajik', 'taken', 'taker', 'takes', 'takin', 'talas', 'talcs', 'talks', 'talky', 'tally', 'talon', 'talus', 'tamal', 'tamed', 'tamer', 'tames', 'tamil', 'tammy', 'tampa', 'tamps', 'tamus', 'tandy', 'tanga', 'tango', 'tangs', 'tangy', 'tanka', 'tanks', 'tansy', 'taped', 'taper', 'tapes', 'tapir', 'tapis', 'tappa', 'tardy', 'tares', 'tarns', 'taros', 'tarot', 'tarps', 'tarry', 'tarts', 'tasks', 'tasse', 'taste', 'tasty', 'tatar', 'tater', 'tates', 'tatou', 'tatty', 'taunt', 'taupe', 'tauts', 'tawny', 'tawse', 'taxer', 'taxes', 'taxis', 'taxon', 'taxus', 'tayra', 'teach', 'teaks', 'teals', 'teams', 'tears', 'teary', 'tease', 'teats', 'tebet', 'techy', 'teddy', 'teems', 'teens', 'teeny', 'teeth', 'teffs', 'teiid', 'telex', 'tells', 'telly', 'tempo', 'temps', 'tempt', 'tench', 'tends', 'tenet', 'tenia', 'tenno', 'tenon', 'tenor', 'tense', 'tenth', 'tents', 'tepal', 'tepee', 'tepid', 'teras', 'terce', 'teres', 'terms', 'terns', 'terry', 'terse', 'tesla', 'testa', 'tests', 'testy', 'teths', 'teton', 'tetra', 'texan', 'texas', 'texts', 'thane', 'thank', 'thats', 'thaws', 'theca', 'theft', 'theme', 'thens', 'there', 'therm', 'theta', 'thick', 'thief', 'thigh', 'thill', 'thing', 'think', 'thins', 'third', 'thole', 'thong', 'thorn', 'three', 'thrip', 'throb', 'throe', 'throw', 'thrum', 'thuds', 'thugs', 'thuja', 'thule', 'thumb', 'thump', 'thyme', 'tiara', 'tiber', 'tibet', 'tibia', 'tical', 'ticks', 'tidal', 'tides', 'tiers', 'tiffs', 'tifli', 'tiger', 'tight', 'tigon', 'tikes', 'tilde', 'tiled', 'tiler', 'tiles', 'tilia', 'tills', 'tilth', 'tilts', 'timed', 'timer', 'times', 'timid', 'timor', 'tinct', 'tinea', 'tined', 'tines', 'tinge', 'tings', 'tinny', 'tints', 'tipis', 'tippy', 'tipsy', 'tired', 'tires', 'titan', 'titer', 'tithe', 'titis', 'title', 'titre', 'titty', 'titus', 'tizzy', 'toads', 'toady', 'toast', 'today', 'toddy', 'todea', 'todus', 'toffs', 'toffy', 'tokay', 'token', 'tokes', 'tokyo', 'toles', 'tolls', 'tombs', 'tomes', 'tonal', 'toned', 'toner', 'tones', 'tonga', 'tongs', 'tonic', 'tonne', 'tonus', 'tools', 'toona', 'toons', 'tooth', 'topaz', 'topee', 'toper', 'topes', 'topic', 'topis', 'topos', 'toque', 'torah', 'torch', 'tores', 'torsk', 'torso', 'torte', 'torts', 'torus', 'total', 'totem', 'toter', 'totes', 'touch', 'tough', 'tours', 'touts', 'towel', 'tower', 'towns', 'towny', 'toxic', 'toxin', 'toyon', 'trace', 'track', 'tract', 'tracy', 'trade', 'trail', 'train', 'trait', 'tramp', 'trams', 'trapa', 'trash', 'trave', 'trawl', 'trays', 'tread', 'treat', 'treed', 'trees', 'treks', 'trema', 'trend', 'trent', 'tress', 'trews', 'treys', 'triad', 'trial', 'tribe', 'trice', 'trick', 'tried', 'trier', 'tries', 'triga', 'trigs', 'trike', 'trill', 'trims', 'trine', 'tripe', 'trips', 'trite', 'troat', 'troll', 'troop', 'trope', 'troth', 'trots', 'trout', 'trove', 'troys', 'truce', 'truck', 'trues', 'truly', 'trump', 'trunk', 'truss', 'trust', 'truth', 'tryst', 'tsars', 'tsine', 'tsuga', 'tubal', 'tubas', 'tubby', 'tubed', 'tuber', 'tucks', 'tudor', 'tufas', 'tuffs', 'tufts', 'tulip', 'tulle', 'tulsa', 'tumid', 'tummy', 'tumor', 'tunas', 'tuner', 'tunes', 'tunga', 'tungs', 'tunic', 'tunis', 'tunny', 'tupek', 'tupik', 'turds', 'turfs', 'turki', 'turks', 'turns', 'turps', 'tushs', 'tusks', 'tutee', 'tutor', 'tuxes', 'tuxub', 'twain', 'twang', 'twats', 'tweak', 'tweed', 'tweet', 'twerp', 'twice', 'twigs', 'twill', 'twine', 'twins', 'twirl', 'twirp', 'twist', 'twits', 'tyche', 'tying', 'tykes', 'tyler', 'tynes', 'types', 'typha', 'typic', 'typos', 'tyres', 'tyros', 'tzars', 'udder', 'uglis', 'ugric', 'uigur', 'ukase', 'ulama', 'ulcer', 'ulema', 'ulmus', 'ulnar', 'ulnas', 'ultra', 'ulvas', 'umbel', 'umber', 'umbos', 'umbra', 'unais', 'unarm', 'unary', 'unaus', 'unbar', 'unbox', 'uncle', 'uncos', 'uncus', 'uncut', 'under', 'undue', 'unfed', 'unfit', 'uniat', 'unify', 'union', 'unite', 'units', 'unity', 'unlax', 'unlit', 'unman', 'unpin', 'unsay', 'unsex', 'untie', 'until', 'unwed', 'unzip', 'upend', 'upper', 'upset', 'upupa', 'urate', 'urban', 'ureas', 'urges', 'uriah', 'urial', 'urine', 'ursus', 'usage', 'users', 'ushas', 'usher', 'using', 'usnea', 'usual', 'usurp', 'usury', 'uteri', 'utile', 'utter', 'uveal', 'uveas', 'uvula', 'uzbak', 'uzbeg', 'uzbek', 'vagal', 'vague', 'vagus', 'vajra', 'vales', 'valet', 'valid', 'valmy', 'valor', 'valse', 'value', 'valve', 'vamps', 'vanda', 'vaned', 'vanes', 'vanir', 'vapid', 'vapor', 'varan', 'varix', 'varna', 'varus', 'vases', 'vasts', 'vatic', 'vault', 'vaunt', 'veals', 'vedic', 'veers', 'veery', 'vegan', 'veils', 'veins', 'velar', 'velds', 'veldt', 'velum', 'venal', 'vends', 'venom', 'vents', 'venue', 'venus', 'vepse', 'verbs', 'verdi', 'verge', 'verpa', 'verse', 'verso', 'verst', 'vertu', 'verve', 'vespa', 'vesta', 'vests', 'vetch', 'vexed', 'vexer', 'vexes', 'vials', 'viand', 'vibes', 'vicar', 'vices', 'vichy', 'vicia', 'video', 'vidua', 'views', 'vigil', 'vigor', 'villa', 'vinca', 'vines', 'vinos', 'vinyl', 'viola', 'viols', 'viper', 'viral', 'vireo', 'virga', 'virgo', 'virtu', 'virus', 'visas', 'vises', 'visit', 'visod', 'visor', 'vista', 'vital', 'vitis', 'vivas', 'vivid', 'vixen', 'vizor', 'vocal', 'vodka', 'vogue', 'vogul', 'voice', 'voids', 'voile', 'volar', 'voles', 'volga', 'volta', 'volts', 'volva', 'vomer', 'vomit', 'voter', 'votes', 'vouch', 'vouge', 'vowel', 'vower', 'vroom', 'vulva', 'wacky', 'wader', 'wades', 'wadis', 'wafer', 'wafts', 'wager', 'wages', 'wagon', 'wahoo', 'waifs', 'wails', 'wains', 'waist', 'waits', 'waive', 'waken', 'waker', 'wakes', 'wales', 'walks', 'walls', 'wally', 'waltz', 'wands', 'wanes', 'wanly', 'wants', 'wapmo', 'wards', 'warms', 'warns', 'warps', 'warts', 'warty', 'washy', 'wasps', 'waste', 'watch', 'water', 'watts', 'waugh', 'wauls', 'waver', 'wawls', 'waxed', 'waxen', 'waxes', 'wayne', 'weald', 'weals', 'weans', 'wears', 'weary', 'weave', 'webby', 'weber', 'wedel', 'wedge', 'weeds', 'weedy', 'weeks', 'weeny', 'weeps', 'weepy', 'wefts', 'weigh', 'weird', 'weirs', 'wekas', 'welch', 'welds', 'wells', 'welsh', 'welts', 'wench', 'wends', 'wests', 'whack', 'whale', 'whams', 'whang', 'whaps', 'wharf', 'whats', 'wheal', 'wheat', 'wheel', 'whelk', 'whelm', 'whelp', 'whets', 'wheys', 'whiff', 'whigs', 'while', 'whims', 'whine', 'whins', 'whiny', 'whirl', 'whirr', 'whirs', 'whish', 'whisk', 'whist', 'white', 'whits', 'whizz', 'whole', 'whomp', 'whoop', 'whops', 'whore', 'whorl', 'whose', 'wicca', 'wicks', 'widen', 'wides', 'widow', 'width', 'wield', 'wifes', 'wight', 'wilds', 'wiles', 'wince', 'winch', 'winds', 'windy', 'wines', 'winey', 'wings', 'winks', 'wiper', 'wipes', 'wired', 'wirer', 'wires', 'wises', 'wisps', 'witty', 'wizen', 'woads', 'woden', 'wolfs', 'wolof', 'woman', 'wombs', 'wonky', 'wonts', 'woods', 'woody', 'wooer', 'woofs', 'woolf', 'wools', 'wooly', 'woosh', 'woozy', 'words', 'wordy', 'works', 'world', 'wormy', 'worry', 'worse', 'worst', 'worth', 'worts', 'wospy', 'wound', 'woven', 'wrack', 'wraps', 'wrath', 'wrawl', 'wreak', 'wreck', 'wrest', 'wrick', 'wries', 'wring', 'wrist', 'write', 'writs', 'wrong', 'wroth', 'wryly', 'xenon', 'xeric', 'xerox', 'xviii', 'xxiii', 'xylem', 'xylol', 'xyris', 'yacca', 'yacht', 'yacks', 'yagis', 'yahoo', 'yakut', 'yanan', 'yangs', 'yanks', 'yards', 'yarns', 'yaups', 'yawls', 'yawns', 'yawps', 'yazoo', 'yearn', 'years', 'yeast', 'yells', 'yelps', 'yemen', 'yenta', 'yeses', 'yetis', 'yield', 'ylems', 'yobbo', 'yodel', 'yodhs', 'yogic', 'yogis', 'yokel', 'yokes', 'yolks', 'yores', 'young', 'youth', 'yowls', 'yquem', 'yuans', 'yucca', 'yucky', 'yukon', 'yules', 'yuman', 'yummy', 'yurts', 'yussa', 'zaire', 'zakat', 'zaman', 'zamia', 'zapus', 'zarfs', 'zayin', 'zeals', 'zebra', 'zensu', 'zeros', 'zests', 'zesty', 'zetas', 'zilch', 'zills', 'zincs', 'zings', 'zippy', 'zitis', 'zloty', 'zombi', 'zonal', 'zones', 'zooid', 'zooms', 'zoril', 'zunis']
-def evaluate_possible_words(guess_history, evaluation_history, words):
-    correct = [None] * 5   
-    present = {}   
-    absent = set()         
-    
-    for guess, evaluation in zip(guess_history, evaluation_history):
-        for i, (letter, result) in enumerate(zip(guess, evaluation)):
-            if result == 'O':
-                correct[i] = letter  
-            elif result == 'X':
-                if letter not in present:
-                    present[letter] = []
-                present[letter].append(i)  
-            elif result == '-':
-                absent.add(letter) 
-    
-    def is_valid_word(word):
-        for i, letter in enumerate(correct):
-            if letter is not None and word[i] != letter:
-                return False
-        for letter, positions in present.items():
-            if letter not in word:
-                return False
-            for pos in positions:
-                if word[pos] == letter: 
-                    return False
-        if any(letter in word for letter in absent):
-            return False
-        return True
 
-    filtered_words = [word for word in words if is_valid_word(word)]
-    return filtered_words
+import random
+from collections import Counter
+def calculate_letter_frequencies(possible_words):
+    """Calculate the frequency of each letter in the possible words."""
+    letter_count = Counter()
+    for word in possible_words:
+        letter_count.update(word)
+    return letter_count
+
+def get_next_guess(guess_history, evaluation_history):
+    """Determine the next guess based on guess history and feedback."""
+    possible_words = set(WORD_LIST)  # Start with all possible words
+
+    # Filter possible words based on feedback from previous guesses
+    for guess, evaluation in zip(guess_history, evaluation_history):
+        for i, feedback in enumerate(evaluation):
+            if feedback == 'O':
+                # The letter is in the correct position
+                possible_words = {word for word in possible_words if word[i] == guess[i]}
+            elif feedback == 'X':
+                # The letter is in the word but not in the correct position
+                possible_words = {word for word in possible_words if guess[i] in word and word[i] != guess[i]}
+            elif feedback == '-':
+                # The letter is not in the word
+                possible_words = {word for word in possible_words if guess[i] not in word}
+
+    if not possible_words:
+        # If no possible words remain, fallback to a random guess
+        return random.choice(WORD_LIST)
+
+    # Calculate letter frequencies to prioritize the next guess
+    letter_frequencies = calculate_letter_frequencies(possible_words)
+
+    # Sort possible words by the sum of their letter frequencies
+    sorted_words = sorted(possible_words, key=lambda word: sum(letter_frequencies[letter] for letter in set(word)), reverse=True)
+    
+    return sorted_words[0]  # Return the best guess based on frequencies
 
 @app.route('/wordle-game', methods=['POST'])
 def wordle_game():
-    if request.is_json:
-        data = request.get_json()
-        print(len(data['guessHistory']))
-        if len(data['guessHistory']) == 0:
-            # First guess
-            guess = "stare"
-        else:
-            guess_history = data['guessHistory']
-            evaluation_history = data['evaluationHistory']
-            possible_words = evaluate_possible_words(guess_history, evaluation_history, word_list)
-            if len(possible_words) == 0:
-                guess = "error"
-            else:
-                guess = possible_words[0]
+    """API endpoint for Wordle game."""
+    try:
+        data = request.json
+        guess_history = data.get("guessHistory", [])
+        evaluation_history = data.get("evaluationHistory", [])
 
-        response = {
-            "guess": guess
-        }
-        return jsonify(response), 200
-    else:
-        return jsonify({"error": "Invalid request format"}), 400
+        next_guess = get_next_guess(guess_history, evaluation_history)
+        return jsonify({"guess": next_guess})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
     
+
 
 
 @app.route('/tourist', methods=['POST'])
@@ -808,44 +812,57 @@ def the_clumsy_programmer():
         # General exception handling
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
+def calculate_efficiency(monsters):
+    """Helper function to calculate maximum efficiency for given monsters."""
+    n = len(monsters)
+    
+    # If there are no monsters or only one monster, no attack is efficient
+    if n == 0 or (n == 1 and monsters[0] <= 0):
+        return 0
+
+    # Initialize the DP array
+    dp = [0] * n
+
+    # Fill the DP array based on the logic derived
+    for i in range(n):
+        # Case 1: Move to rear (don't attack this time frame)
+        if i > 0:
+            dp[i] = dp[i - 1]
+
+        # Case 2: Prepare a transmutation circle and attack this time frame
+        if i >= 1:  # Need at least one time frame to prepare
+            gain = monsters[i] - 1 if monsters[i] > 0 else 0
+            dp[i] = max(dp[i], dp[i - 2] + gain if i > 1 else gain)
+
+    return dp[n - 1]  # The last entry has the maximum efficiency
+
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
     try:
+        # Validate and parse input data
         data = request.json
+        if not isinstance(data, list):
+            return jsonify({"error": "Input should be a list of hunts"}), 400
+
         results = []
 
         for hunt in data:
+            # Validate the structure of each hunt
+            if not isinstance(hunt, dict) or "monsters" not in hunt:
+                return jsonify({"error": "Each hunt should be a dictionary with a 'monsters' key"}), 400
+            
             monsters = hunt["monsters"]
-            n = len(monsters)
-
-            # Handle edge case where there's only one time frame
-            if n == 1:
-                results.append({"efficiency": 0})
-                continue
-
-            # Initialize the DP array
-            dp = [0] * n
-
-            # Base cases
-            dp[0] = 0  # No monsters, no efficiency
-            dp[1] = max(0, monsters[1] - monsters[0])  # Only attack if there's something to defeat
-
-            # Fill the DP array
-            for i in range(2, n):
-                # Calculate the maximum efficiency by considering two options:
-                # 1. Attack at the current time frame (i)
-                # 2. Attack at the previous time frame (i-1) and move to the current time frame (i)
-                attack = max(0, monsters[i] - monsters[i - 1])
-                dp[i] = max(dp[i - 1], dp[i - 2] + attack)
-
-            results.append({"efficiency": dp[n - 1]})
+            if not isinstance(monsters, list) or not all(isinstance(m, int) for m in monsters):
+                return jsonify({"error": "Monsters should be a list of integers"}), 400
+            
+            # Calculate efficiency for the current hunt using the helper function
+            efficiency = calculate_efficiency(monsters)
+            results.append({"efficiency": efficiency})
 
         return jsonify(results)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
-
     
 @app.route('/mailtime', methods=['POST'])
 def average_response_time():
@@ -886,217 +903,266 @@ def average_response_time():
     return jsonify(average_response_times)
 
 
-
 variables = {}
 
-def raise_error(line):
-    return f"ERROR at line {line}"
+# List to store output
+outputs = []
 
-def validate_numeric_args(args, line):
-    """Validates that all arguments are numeric."""
-    try:
-        return [float(arg) for arg in args], None
-    except ValueError:
-        return None, raise_error(line)
+def execute_expression(expr, line_number):
+    global variables, outputs
+    # Remove outer parentheses and split by space
+    if not (expr.startswith("(") and expr.endswith(")")):
+        raise ValueError(f"ERROR at line {line_number}")
 
-def validate_string_args(args, line):
-    """Validates that all arguments are strings."""
-    if all(isinstance(arg, str) for arg in args):
-        return args, None
-    else:
-        return None, raise_error(line)
+    expr = expr[1:-1].strip()
+    parts = expr.split(" ")
     
-def is_numeric(value):
-    try:
-        float(value)
-        return True
-    except ValueError:
-        return False
+    func_name = parts[0]
+    args = parts[1:]
 
-def is_boolean(value):
-    return value in ["true", "false"]
-
-def is_string(value):
-    return value.startswith('"') and value.endswith('"')
-
-def parse_value(value):
-    """Converts a string representation into the correct data type."""
-    if is_numeric(value):
-        return float(value)
-    elif is_boolean(value):
-        return value == "true"  # Convert string "true" to Python True
-    elif value == "null":
+    # Handle printing
+    if func_name == "puts":
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        arg_value = evaluate_argument(args[0], line_number)
+        outputs.append(arg_value)  # Append to outputs
         return None
-    elif is_string(value):
-        return value[1:-1]  # Strip quotes for strings
-    elif value in variables:
-        return variables[value]  # Return variable value if defined
+
+    # Handle variable setting
+    elif func_name == "set":
+        if len(args) != 2:
+            raise ValueError(f"ERROR at line {line_number}")
+        var_name, value = args
+        if var_name in variables:
+            raise ValueError(f"ERROR at line {line_number}")
+        variables[var_name] = evaluate_argument(value, line_number)
+        return None
+
+    # Handle string functions
+    elif func_name == "concat":
+        if len(args) != 2:
+            raise ValueError(f"ERROR at line {line_number}")
+        return concat(args, line_number)
+
+    elif func_name == "lowercase":
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        return lowercase(args[0], line_number)
+
+    elif func_name == "uppercase":
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        return uppercase(args[0], line_number)
+
+    elif func_name == "replace":
+        if len(args) != 3:
+            raise ValueError(f"ERROR at line {line_number}")
+        return replace(args, line_number)
+
+    elif func_name == "substring":
+        if len(args) != 3:
+            raise ValueError(f"ERROR at line {line_number}")
+        return substring(args, line_number)
+
+    # Handle number functions
+    elif func_name == "add":
+        return add(args, line_number)
+
+    elif func_name == "subtract":
+        return subtract(args, line_number)
+
+    elif func_name == "multiply":
+        return multiply(args, line_number)
+
+    elif func_name == "divide":
+        return divide(args, line_number)
+
+    elif func_name == "abs":
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        return abs_function(args[0], line_number)
+
+    elif func_name == "max":
+        return max_function(args, line_number)
+
+    elif func_name == "min":
+        return min_function(args, line_number)
+
+    elif func_name == "gt":
+        return gt(args, line_number)
+
+    elif func_name == "lt":
+        return lt(args, line_number)
+
+    elif func_name == "equal":
+        return equal(args, line_number)
+
+    elif func_name == "not_equal":
+        return not_equal(args, line_number)
+
+    elif func_name == "str":
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        return str_function(args[0], line_number)
+
     else:
-        return None  # Invalid or undefined variable
-  
+        raise ValueError(f"ERROR at line {line_number}")
+
+
+def evaluate_argument(arg, line_number):
+    if arg in variables:
+        return variables[arg]
+    elif arg.isdigit() or (arg[0] == '-' and arg[1:].isdigit()):
+        return int(arg)
+    elif '.' in arg:
+        try:
+            return float(arg)
+        except ValueError:
+            raise ValueError(f"ERROR at line {line_number}")
+    elif arg == "true":
+        return True
+    elif arg == "false":
+        return False
+    elif arg == "null":
+        return None
+    elif arg.startswith('"') and arg.endswith('"'):
+        return arg[1:-1]  # Return string without quotes
+    else:
+        raise ValueError(f"ERROR at line {line_number}")
+
+
+# Define each operation
 def concat(args, line_number):
-    if len(args) != 2 or not all(is_string(arg) for arg in args):
-        return None, raise_error(line_number, "concat expects two string arguments")
-    return args[0][1:-1] + args[1][1:-1], None  # Concatenate after stripping quotes
+    str1 = evaluate_argument(args[0], line_number)
+    str2 = evaluate_argument(args[1], line_number)
+    return str1 + str2
+
+
+def lowercase(arg, line_number):
+    str_val = evaluate_argument(arg, line_number)
+    return str_val.lower()
+
+
+def uppercase(arg, line_number):
+    str_val = evaluate_argument(arg, line_number)
+    return str_val.upper()
+
+
+def replace(args, line_number):
+    src = evaluate_argument(args[0], line_number)
+    target = evaluate_argument(args[1], line_number)
+    replacement = evaluate_argument(args[2], line_number)
+    return src.replace(target, replacement)
+
 
 def substring(args, line_number):
-    if len(args) != 3 or not is_string(args[0]) or not all(is_numeric(arg) for arg in args[1:]):
-        return None, raise_error(line_number, "substring expects a string and two numbers")
-    string, start, end = args[0][1:-1], int(float(args[1])), int(float(args[2]))
-    if start < 0 or end > len(string) or start > end:
-        return None, raise_error(line_number, "substring index out of range")
-    return string[start:end], None
+    src = evaluate_argument(args[0], line_number)
+    start = evaluate_argument(args[1], line_number)
+    end = evaluate_argument(args[2], line_number)
+    if not isinstance(src, str) or not isinstance(start, int) or not isinstance(end, int):
+        raise ValueError(f"ERROR at line {line_number}")
+    return src[start:end]
+
 
 def add(args, line_number):
-    numbers, error = validate_numeric_args(args, line_number)
-    if error:
-        return None, error
-    return str(round(sum(numbers), 4)), None
+    return sum(evaluate_argument(arg, line_number) for arg in args)
+
+
+def subtract(args, line_number):
+    if len(args) != 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    num1 = evaluate_argument(args[0], line_number)
+    num2 = evaluate_argument(args[1], line_number)
+    return num1 - num2
+
+
+def multiply(args, line_number):
+    result = 1
+    for arg in args:
+        result *= evaluate_argument(arg, line_number)
+    return result
+
 
 def divide(args, line_number):
     if len(args) != 2:
-        return None, raise_error(line_number, "divide expects two arguments")
-    numbers, error = validate_numeric_args(args, line_number)
-    if error:
-        return None, error
-    if numbers[1] == 0:
-        return None, raise_error(line_number, "division by zero")
-    if numbers[0].is_integer() and numbers[1].is_integer():
-        return str(int(numbers[0] // numbers[1])), None  # Integer division
-    return str(round(numbers[0] / numbers[1], 4)), None  # Floating point division
+        raise ValueError(f"ERROR at line {line_number}")
+    num1 = evaluate_argument(args[0], line_number)
+    num2 = evaluate_argument(args[1], line_number)
+    if num2 == 0:
+        raise ValueError(f"ERROR at line {line_number}")
+    return num1 // num2 if isinstance(num1, int) and isinstance(num2, int) else num1 / num2
+
+
+def abs_function(arg, line_number):
+    num = evaluate_argument(arg, line_number)
+    return abs(num)
+
+
+def max_function(args, line_number):
+    if len(args) < 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    return max(evaluate_argument(arg, line_number) for arg in args)
+
+
+def min_function(args, line_number):
+    if len(args) < 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    return min(evaluate_argument(arg, line_number) for arg in args)
+
+
+def gt(args, line_number):
+    if len(args) != 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    num1 = evaluate_argument(args[0], line_number)
+    num2 = evaluate_argument(args[1], line_number)
+    return num1 > num2
+
+
+def lt(args, line_number):
+    if len(args) != 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    num1 = evaluate_argument(args[0], line_number)
+    num2 = evaluate_argument(args[1], line_number)
+    return num1 < num2
+
 
 def equal(args, line_number):
     if len(args) != 2:
-        return None, raise_error(line_number, "equal expects two arguments")
-    val1, val2 = parse_value(args[0]), parse_value(args[1])
-    if type(val1) != type(val2):
-        return "false", None
-    return "true" if val1 == val2 else "false", None
+        raise ValueError(f"ERROR at line {line_number}")
+    arg1 = evaluate_argument(args[0], line_number)
+    arg2 = evaluate_argument(args[1], line_number)
+    return arg1 == arg2
 
-def set_variable(args, line_number):
+
+def not_equal(args, line_number):
     if len(args) != 2:
-        return None, raise_error(line_number, "set expects a variable name and a value")
-    var_name, value = args[0], args[1]
-    if var_name in variables:
-        return None, raise_error(line_number, "variable already exists")
-    variables[var_name] = parse_value(value)
-    return None, None
+        raise ValueError(f"ERROR at line {line_number}")
+    arg1 = evaluate_argument(args[0], line_number)
+    arg2 = evaluate_argument(args[1], line_number)
+    return arg1 != arg2
 
-def replace(args, line_number):
-    if len(args) != 3 or not all(is_string(arg) for arg in args):
-        return None, raise_error(line_number, "replace expects three string arguments")
-    source, target, replacement = args[0][1:-1], args[1][1:-1], args[2][1:-1]
-    return source.replace(target, replacement), None
 
-def subtract(args, line_number):
-    if len(args) != 2 or not all(is_numeric(arg) for arg in args):
-        return None, raise_error(line_number, "subtract expects two numeric arguments")
-    result = float(args[0]) - float(args[1])
-    return str(round(result, 4)), None
+def str_function(arg, line_number):
+    value = evaluate_argument(arg, line_number)
+    return str(value)
 
-def multiply(args, line_number):
-    numbers, error = validate_numeric_args(args, line_number)
-    if error:
-        return None, error
-    result = 1
-    for num in numbers:
-        result *= num
-    return str(round(result, 4)), None
 
-def gt(args, line_number):
-    if len(args) != 2 or not all(is_numeric(arg) for arg in args):
-        return None, raise_error(line_number, "gt expects two numeric arguments")
-    return "true" if float(args[0]) > float(args[1]) else "false", None
-
-def lt(args, line_number):
-    if len(args) != 2 or not all(is_numeric(arg) for arg in args):
-        return None, raise_error(line_number, "lt expects two numeric arguments")
-    return "true" if float(args[0]) < float(args[1]) else "false", None
-
-def eval_lisp_expression(expression, line_number):
-    tokens = expression.replace('(', '').replace(')', '').split()
-
-    if not tokens:
-        return None, None
-
-    function = tokens[0]
-
-    # Handle functions
-    if function == "puts":
-        if len(tokens) != 2 or not tokens[1].startswith('"') or not tokens[1].endswith('"'):
-            return None, raise_error(line_number)
-        return tokens[1][1:-1], None 
-    elif function == "set":
-        return set_variable(tokens[1:], line_number)
-    elif function == "concat":
-        return concat(tokens[1:], line_number)
-    elif function == "substring":
-        return substring(tokens[1:], line_number)
-    elif function == "add":
-        return add(tokens[1:], line_number)
-    elif function == "subtract":
-        return subtract(tokens[1:], line_number)
-    elif function == "multiply":
-        return multiply(tokens[1:], line_number)
-    elif function == "divide":
-        return divide(tokens[1:], line_number)
-    elif function == "replace":
-        return replace(tokens[1:], line_number)
-    elif function == "lowercase":
-        if len(tokens) != 2:
-            return None, raise_error(line_number)
-        args, error = validate_string_args([tokens[1]], line_number)
-        if error:
-            return None, error
-        return args[0].lower(), None
-    
-    elif function == "uppercase":
-        if len(tokens) != 2:
-            return None, raise_error(line_number)
-        args, error = validate_string_args([tokens[1]], line_number)
-        if error:
-            return None, error
-        return args[0].upper(), None
-    
-    elif function == "gt":
-        return gt(tokens[1:], line_number)
-    elif function == "lt":
-        return lt(tokens[1:], line_number)
-    elif function == "equal":
-        return equal(tokens[1:], line_number)
-    elif function == "not_equal":
-        if len(tokens) != 3:
-            return None, raise_error(line_number)
-        if tokens[1] != tokens[2]:
-            return "true", None
-        return "false", None
-    elif function == "str":
-        if len(tokens) != 2:
-            return None, raise_error(line_number)
-        var = tokens[1]
-        if var in variables:
-            return str(variables[var]), None
-        return str(var), None
-    
-    # If the function is unknown
-    return None, raise_error(line_number, f"unknown function '{function}'")
 @app.route('/lisp-parser', methods=['POST'])
 def lisp_parser():
-    data = request.json.get('expressions', [])
-    output = []
-    
-    for i, line in enumerate(data):
-        result, error = eval_lisp_expression(line, i + 1)
-        if error:
-            output.append(error)
-            break
-        if result:
-            output.append(result)
-    
-    return jsonify({"output": output})
+    global outputs
+    outputs = []  # Reset outputs for each request
+    try:
+        data = request.get_json()
+        expressions = data.get('expressions', [])
+        for i, expression in enumerate(expressions, start=1):
+            execute_expression(expression, i)
+        return jsonify({"output": outputs})
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    except ValueError as e:
+        return jsonify({"output": []}), 400
+    except Exception as e:
+        return jsonify({"output": []}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
