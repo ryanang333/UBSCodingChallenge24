@@ -293,7 +293,7 @@ def tourist():
         "Ryogoku", "Morishita", "Kiyosumi-shirakawa", "Monzen-nakacho", "Tsukishima",
         "Kachidoki", "Shiodome", "Daimon", "Shiodome", "Tsukishima"
     ]
-    }
+}
     
     travelling_time_betw_stations = {
     "Tokyo Metro Ginza Line": 2,
@@ -309,7 +309,7 @@ def tourist():
     "Toei Mita Line": 4,
     "Toei Shinjuku Line": 1.5,
     "Toei Oedo Line": 1
-    }
+}
 
     # Step 1: Identify the subway line
     starting_line = None
@@ -320,7 +320,7 @@ def tourist():
     
     if starting_line is None:
         return jsonify({"error": "Invalid starting point"})
-    
+
     # All possible stations
     stations_list = subway_stations[starting_line]
 
@@ -336,7 +336,7 @@ def tourist():
             time_spent = input_dict[starting_point][1]  # Time spent at starting point
             
             # Explore further stations
-            for j in range(i+1, len(stations_list)):
+            for j in range(i + 1, len(stations_list)):
                 next_station = stations_list[j]
                 travel_time = travelling_time_betw_stations[starting_line]
                 required_time = input_dict[next_station][1]
@@ -358,7 +358,7 @@ def tourist():
     # Step 3: Run pathfinding
     best_path, max_satisfaction = find_max_satisfaction_path()
 
-    # Return the results
+    # Return the best path and maximum satisfaction
     return jsonify({"path": best_path, "satisfaction": max_satisfaction})
 
 
