@@ -549,8 +549,7 @@ def evaluate_expression(count, increment):
 
 @app.route('/lab_work', methods=['POST'])
 def lab_work():
-    input_data = request.get_json()
-    markdown_tables = input_data.get('tables', [])
+    markdown_tables = request
     labs = parse_input(markdown_tables)
 
     results = []
