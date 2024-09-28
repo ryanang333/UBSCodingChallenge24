@@ -662,35 +662,61 @@ def will_bullet_hit(new_x, new_y, bullets, max_y, max_x):
     return False
 
 
-from collections import defaultdict
-# Function to preprocess the dictionary by creating patterns with one letter removed
-def preprocess_dictionary(dictionary):
-    pattern_dict = defaultdict(list)
+# Class for Trie implementation
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.words = []
 
-    # Build patterns for all words in the dictionary
-    for word in dictionary:
-        for i in range(len(word)):
-            pattern = word[:i] + '*' + word[i+1:]
-            pattern_dict[pattern].append(word)
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
     
-    return pattern_dict
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+            node.words.append(word)  # Store words in the node
+    
+    def search(self, pattern):
+        # Collect all words from the trie that match the pattern
+        return self._search_helper(self.root, pattern, 0)
 
-# Function to correct mistyped words using the preprocessed dictionary
-def correct_mistypes(preprocessed_dict, mistypes):
+    def _search_helper(self, node, pattern, index):
+        if index == len(pattern):
+            return node.words
+        
+        result = []
+        char = pattern[index]
+        if char == '*':
+            # Wildcard case: explore all children
+            for child in node.children.values():
+                result.extend(self._search_helper(child, pattern, index + 1))
+        else:
+            # Normal case: continue with the specific child
+            if char in node.children:
+                result.extend(self._search_helper(node.children[char], pattern, index + 1))
+        return result
+
+# Preprocess the dictionary by inserting words into the trie
+def preprocess_dictionary(dictionary):
+    trie = Trie()
+    for word in dictionary:
+        trie.insert(word)
+    return trie
+
+# Function to correct mistyped words using the trie
+def correct_mistypes(trie, mistypes):
     corrections = []
-
-    # For each mistyped word, generate patterns and check for corrections
     for mistyped_word in mistypes:
-        found_correction = False  # Flag to indicate if a correction was found
         for i in range(len(mistyped_word)):
             pattern = mistyped_word[:i] + '*' + mistyped_word[i+1:]
-            if pattern in preprocessed_dict:
-                corrections.append(preprocessed_dict[pattern][0])
-                found_correction = True
-                break  # Stop checking after finding the first match
-        if not found_correction:
-            corrections.append(mistyped_word)  # Append the original if no correction is found
-
+            possible_corrections = trie.search(pattern)
+            if possible_corrections:
+                corrections.append(possible_corrections[0])  # Return the first matching word
+                break
     return corrections
 
 # POST endpoint to correct the mistyped words
@@ -704,11 +730,11 @@ def the_clumsy_programmer():
         dictionary = case['dictionary']
         mistypes = case['mistypes']
 
-        # Preprocess the dictionary to generate patterns
-        preprocessed_dict = preprocess_dictionary(dictionary)
+        # Preprocess the dictionary to generate the trie
+        trie = preprocess_dictionary(dictionary)
 
-        # Correct the mistyped words using the preprocessed patterns
-        corrections = correct_mistypes(preprocessed_dict, mistypes)
+        # Correct the mistyped words using the trie
+        corrections = correct_mistypes(trie, mistypes)
 
         # Append the corrections to the result list
         result.append({"corrections": corrections})
