@@ -4,15 +4,17 @@ app = Flask(__name__)
 
 def efficient_hunter_kazuma(monsters):
     n = len(monsters)
-    dp = [0] * (n + 1)
+    dp = [0] * n
 
-    for i in range(1, n + 1):
-        if i == 1:
-            dp[i] = max(0, monsters[i - 1] - 1)
+    for i in range(n):
+        if i == 0:
+            dp[i] = 0
+        elif i == 1:
+            dp[i] = max(0, monsters[i] - 1)
         else:
-            dp[i] = max(dp[i - 1], dp[i - 2] + monsters[i - 1] - 1)
+            dp[i] = max(dp[i-1], dp[i-2] + max(0, monsters[i] - 1))
 
-    return {"efficiency": dp[n]}
+    return {"efficiency": dp[n-1]}
 
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma_endpoint():
