@@ -7,7 +7,7 @@ app = Flask(__name__)
 def get_ctfed():
     response = {
         "sanityScroll": {
-            "flag": "UB5{b'w3lc0m3_70_c7f_N0ttyB01'}"
+            "flag": "UB5{b'w3lc0m3_70_c7f_N0ttyB01}"
         },
         "openAiExploration": {
             "flag": "FLAG_CONTENT_HERE"
@@ -774,7 +774,6 @@ def the_clumsy_programmer():
         # General exception handling
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
-
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
     try:
@@ -785,24 +784,25 @@ def efficient_hunter_kazuma():
             monsters = hunt["monsters"]
             n = len(monsters)
 
-            if n == 1:
+            if n == 0:
                 results.append({"efficiency": 0})
                 continue
-
-            # Initialize the DP array
+            
+            # Initialize DP array
             dp = [0] * n
-
+            
             # Base cases
-            dp[0] = 0  # No monsters, no efficiency
-            if monsters[0] > 0:
-                dp[1] = max(0, monsters[0] - 0)  # Only attack if there's something to defeat
+            dp[0] = max(0, monsters[0])  # If he attacks the first time
+            if n > 1:
+                # Calculate the second time frame
+                dp[1] = max(dp[0], monsters[1] - monsters[0])  # He can attack or skip
 
             # Fill the DP array
-            for i in range(1, n):
-                attack = max(0, monsters[i] - monsters[i - 1]) if i > 0 else monsters[i]
-                dp[i] = max(dp[i - 1], (dp[i - 2] + attack) if i > 1 else attack)
+            for i in range(2, n):
+                # Choose to attack or skip
+                dp[i] = max(dp[i - 1],  monsters[i] - monsters[i - 1] + dp[i - 2])
 
-            results.append({"efficiency": dp[n - 1]})
+            results.append({"efficiency": dp[-1]})
 
         return jsonify(results)
 
