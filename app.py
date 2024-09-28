@@ -775,37 +775,33 @@ def the_clumsy_programmer():
         # General exception handling
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
-def calculate_efficiency(monsters):
+def efficient_hunter_kazuma(monsters):
     n = len(monsters)
-    if n == 0:
-        return 0
-    
-    # Initialize dp array with zeroes
-    dp = [0] * (n + 2)  # Extra space for boundary conditions
+    dp = [[0] * 2 for _ in range(n + 1)]
 
-    # Fill dp array from back to front
-    for i in range(n - 1, -1, -1):
-        # Calculate potential earnings if attacking now
-        attack_now = monsters[i] + (dp[i + 2] if i + 2 < n else 0) - 1
-        # Carry over max efficiency from the next time frame
-        move_to_rear = dp[i + 1]
-        
-        # Store the maximum of both options
-        dp[i] = max(attack_now, move_to_rear)
+    for i in range(1, n + 1):
+        # Prepare Transmutation Circle
+        dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] - monsters[i - 1])
 
-    return max(dp[0], 0)  # Ensure non-negative efficiency
+        # Attack
+        dp[i][1] = max(dp[i - 1][0] + monsters[i - 1] - 1, dp[i - 1][1])
+
+    # Find the maximum efficiency
+    max_efficiency = 0
+    for i in range(n + 1):
+        for j in range(2):
+            if dp[i][j] > max_efficiency:
+                max_efficiency = dp[i][j]
+
+    return {"efficiency": max_efficiency}
 
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
-def efficient_hunter_kazuma():
+def efficient_hunter_kazuma_endpoint():
     data = request.get_json()
-    output_data = []
+    results = [{"efficiency": efficient_hunter_kazuma(m["monsters"])["efficiency"]} for m in data]
+    return jsonify(results)
 
-    for entry in data:
-        monsters = entry["monsters"]
-        efficiency = calculate_efficiency(monsters)
-        output_data.append({"efficiency": efficiency})
 
-    return jsonify(output_data)
     
 @app.route('/mailtime', methods=['POST'])
 def average_response_time():
