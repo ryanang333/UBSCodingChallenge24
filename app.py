@@ -73,17 +73,7 @@ def map_to_board(char_map, rows, cols):
     return ''.join(board)
 
 
-# meaningpedia_resp = requests.get(
-#     "https://meaningpedia.com/5-letter-words?show=all")
 
-# # get list of words by grabbing regex captures of response
-# # there's probably a far better way to do this by actually parsing the HTML
-# # response, but I don't know how to do that, and this gets the job done
-
-# # compile regex
-# pattern = re.compile(r'<span itemprop="name">(\w+)</span>')
-# # find all matches
-# word_list = pattern.findall(meaningpedia_resp.text)
 word_list =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abate', 
 'abbot', 'abele', 'abets', 'abhor', 'abide', 'abies', 'ables', 'abode', 'abohm', 'abort', 'about',
 'above', 'abuse', 'abuts', 'abuzz', 'abyes', 'abysm', 'abyss', 'accra', 
