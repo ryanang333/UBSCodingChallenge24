@@ -264,21 +264,11 @@ def calculate_letter_frequencies(possible_words):
         letter_count.update(word)
     return letter_count
 
-def calculate_positional_frequencies(possible_words):
-    """Calculate letter frequencies by position."""
-    positional_count = [Counter() for _ in range(5)]  # Assuming 5-letter words
-    for word in possible_words:
-        for i, letter in enumerate(word):
-            positional_count[i][letter] += 1
-    return positional_count
-
-def score_word(word, letter_frequencies, positional_frequencies):
+def score_word(word, letter_frequencies):
     """Score the word based on letter frequencies and unique letters."""
     score = sum(letter_frequencies[letter] for letter in set(word))  # Frequency score
     unique_letter_count = len(set(word))  # Unique letters count
-    positional_score = sum(positional_frequencies[i][letter] for i, letter in enumerate(word))
-    
-    return score + unique_letter_count + positional_score  # Combine scores
+    return score + unique_letter_count  # Combine scores
 
 def filter_possible_words(possible_words, guess_history, evaluation_history):
     """Filter possible words based on guess history and feedback."""
@@ -306,12 +296,11 @@ def get_next_guess(guess_history, evaluation_history, possible_words):
     if not possible_words:
         return random.choice(WORD_LIST)  # Fallback to a random guess
 
-    # Calculate letter frequencies and positional frequencies to prioritize the next guess
+    # Calculate letter frequencies to prioritize the next guess
     letter_frequencies = calculate_letter_frequencies(possible_words)
-    positional_frequencies = calculate_positional_frequencies(possible_words)
 
     # Score all possible words and sort them by score
-    scored_words = [(word, score_word(word, letter_frequencies, positional_frequencies)) for word in possible_words]
+    scored_words = [(word, score_word(word, letter_frequencies)) for word in possible_words]
     scored_words.sort(key=lambda x: x[1], reverse=True)
 
     return scored_words[0][0]  # Return the best guess based on scores
