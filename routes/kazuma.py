@@ -2,63 +2,60 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+def calculate_efficiency(monsters):
+    """Helper function to calculate maximum efficiency for given monsters."""
+    n = len(monsters)
+
+    # Handle edge cases for efficiency
+    if n == 0:
+        return 0  # No monsters, no efficiency
+    if n == 1:
+        return 0  # One monster, no efficiency
+
+    # Initialize the last two states for DP
+    prev2 = 0  # Efficiency from two steps back
+    prev1 = 0  # Efficiency from one step back
+
+    # Iterate through the monsters starting from the second one
+    for i in range(1, n):
+        # Calculate potential efficiency gain by attacking the current monster
+        attack_gain = max(0, monsters[i] - monsters[i - 1])
+        # Current efficiency based on the last two states
+        current_efficiency = max(prev1, prev2 + attack_gain)
+
+        # Move the window forward
+        prev2 = prev1
+        prev1 = current_efficiency
+
+    return prev1  # Return the last calculated efficiency
+
+
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
     try:
+        # Validate and parse input data
         data = request.json
-        
-        # Validate input data
         if not isinstance(data, list):
             return jsonify({"error": "Input should be a list of hunts"}), 400
 
         results = []
 
         for hunt in data:
-            # Validate hunt structure
+            # Validate the structure of each hunt
             if not isinstance(hunt, dict) or "monsters" not in hunt:
                 return jsonify({"error": "Each hunt should be a dictionary with a 'monsters' key"}), 400
-
-            monsters = hunt["monsters"]
             
-            # Ensure monsters is a list
+            monsters = hunt["monsters"]
             if not isinstance(monsters, list) or not all(isinstance(m, int) for m in monsters):
                 return jsonify({"error": "Monsters should be a list of integers"}), 400
-
-            n = len(monsters)
-
-            # Handle edge case for empty monster list
-            if n == 0:
-                results.append({"efficiency": 0})
-                continue
-
-            # Handle case where there is only one monster
-            if n == 1:
-                results.append({"efficiency": 0})
-                continue
-
-            # Initialize the DP array to track max efficiency
-            dp = [0] * n
-
-            # Base case: no efficiency gain for the first monster (dp[0] = 0)
-            dp[0] = 0
-
-            # Handle second position for DP array
-            dp[1] = max(0, monsters[1] - monsters[0])
-
-            # Fill the DP array with the maximum efficiency calculation
-            for i in range(2, n):
-                # Calculate the efficiency gain by attacking the current monster
-                attack = max(0, monsters[i] - monsters[i - 1])
-                # Update dp[i] by considering whether to skip the previous monster or not
-                dp[i] = max(dp[i - 1], dp[i - 2] + attack)
-
-            # Append the result for the current hunt
-            results.append({"efficiency": dp[n - 1]})
+            
+            # Calculate efficiency for the current hunt using the helper function
+            efficiency = calculate_efficiency(monsters)
+            results.append({"efficiency": efficiency})
 
         return jsonify(results)
 
     except Exception as e:
-        # Return a 400 error with the exception message if something goes wrong
         return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
