@@ -1,5 +1,6 @@
 from flask import Flask
 from flask import Flask, request, jsonify
+from datetime import datetime
 import requests, re
 app = Flask(__name__)
 
@@ -774,6 +775,7 @@ def the_clumsy_programmer():
         # General exception handling
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
+
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
     try:
@@ -784,31 +786,67 @@ def efficient_hunter_kazuma():
             monsters = hunt["monsters"]
             n = len(monsters)
 
-            if n == 1:
+            # Edge case: No monsters
+            if n == 0:
                 results.append({"efficiency": 0})
                 continue
-            
-            # Initialize variables to track maximum efficiency
-            prev2 = 0  # Corresponds to dp[i - 2]
-            prev1 = max(0, monsters[0])  # Corresponds to dp[i - 1]
 
-            for i in range(1, n):
-                # Calculate current attack value
-                attack = max(0, monsters[i] - monsters[i - 1])
-                
-                # Calculate the maximum efficiency for the current time frame
-                current = max(prev1, prev2 + attack)
+            # DP array for tracking maximum efficiency
+            dp = [0] * (n + 1)  # n+1 to handle edge cases easily
 
-                # Update previous states for the next iteration
-                prev2 = prev1
-                prev1 = current
+            for i in range(n):
+                # Update current state without action
+                dp[i + 1] = max(dp[i + 1], dp[i])  # Carry forward previous efficiency
 
-            results.append({"efficiency": prev1})
+                # Check if Kazuma can attack
+                if monsters[i] > 0:
+                    attack_earning = monsters[i] - 1  # Earnings after paying adventurers
+
+                    # If Kazuma attacks at time i, he cannot attack at i + 1
+                    if i + 1 < n:  # Only update if there is a next time
+                        dp[i + 2] = max(dp[i + 2], dp[i] + attack_earning)
+                    else:
+                        dp[i + 1] = max(dp[i + 1], dp[i] + attack_earning)
+
+            # Maximum efficiency found
+            results.append({"efficiency": max(dp)})
 
         return jsonify(results)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
     
+
+    
+@app.route('/mailtime', methods=['POST'])
+def average_response_time():
+    data = request.get_json()
+
+    # Prepare dictionaries to store response times and counts
+    response_times = {user['name']: [] for user in data['users']}
+    last_sent_time = {}
+
+    # Process each email to calculate response times
+    for email in data['emails']:
+        sender = email['sender']
+        receiver = email['receiver']
+        time_sent = datetime.fromisoformat(email['timeSent'])
+        
+        if receiver in last_sent_time:
+            # Calculate response time
+            response_time = (time_sent - last_sent_time[receiver]).total_seconds()
+            response_times[receiver].append(response_time)
+
+        # Update the last sent time for the sender
+        last_sent_time[sender] = time_sent
+
+    # Calculate average response times
+    average_response_times = {
+        user: int(sum(times) / len(times)) if times else 0
+        for user, times in response_times.items()
+    }
+
+    return jsonify(average_response_times)
+
 if __name__ == '__main__':
     app.run(debug=True)
