@@ -1,28 +1,34 @@
 from flask import Flask, request, jsonify
+from collections import defaultdict
 
 app = Flask(__name__)
 
+# Function to preprocess the dictionary by creating patterns with one letter removed
+def preprocess_dictionary(dictionary):
+    pattern_dict = defaultdict(list)
+    
+    for word in dictionary:
+        for i in range(len(word)):
+            # Create a pattern by removing the character at index i
+            pattern = word[:i] + '*' + word[i+1:]
+            pattern_dict[pattern].append(word)
+    
+    return pattern_dict
 
-# Helper function to check if two words differ by exactly one letter
-def differs_by_one(word1, word2):
-    diff_count = 0
-    for a, b in zip(word1, word2):
-        if a != b:
-            diff_count += 1
-        if diff_count > 1:
-            return False
-    return diff_count == 1
-
-# Function to correct mistyped words using the dictionary
-def correct_mistypes(dictionary, mistypes):
+# Function to correct mistyped words using the preprocessed dictionary
+def correct_mistypes(preprocessed_dict, mistypes):
     corrections = []
+    
     for mistyped_word in mistypes:
-        # Iterate over each correct word in the dictionary
-        for correct_word in dictionary:
-            # Call differs_by_one and pass mistyped_word and correct_word
-            if differs_by_one(mistyped_word, correct_word):
-                corrections.append(correct_word)
-                break  # Once a match is found, no need to check further
+        # Try to match the mistyped word by generating patterns with one letter removed
+        for i in range(len(mistyped_word)):
+            pattern = mistyped_word[:i] + '*' + mistyped_word[i+1:]
+            
+            # If a match is found in the preprocessed dictionary, take the first match
+            if pattern in preprocessed_dict:
+                corrections.append(preprocessed_dict[pattern][0])
+                break
+    
     return corrections
 
 # POST endpoint to correct the mistyped words
@@ -36,8 +42,11 @@ def the_clumsy_programmer():
         dictionary = case['dictionary']
         mistypes = case['mistypes']
         
-        # Correct the mistyped words
-        corrections = correct_mistypes(dictionary, mistypes)
+        # Preprocess the dictionary to generate patterns
+        preprocessed_dict = preprocess_dictionary(dictionary)
+        
+        # Correct the mistyped words using the preprocessed patterns
+        corrections = correct_mistypes(preprocessed_dict, mistypes)
         
         # Append the corrections to the result list
         result.append({"corrections": corrections})
