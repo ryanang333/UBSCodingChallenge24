@@ -589,27 +589,22 @@ def lab_work():
 
     return jsonify(results)
 
+
 @app.route('/dodge', methods=['POST'])
 def dodge():
-    # Ensure the request has the correct Content-Type
     if request.content_type != 'application/json':
-        return jsonify({"error": "Content-Type must be application/json"}), 415  # Unsupported Media Type
+        return jsonify({"error": "Content-Type must be application/json"}), 415
     
-    # Get the map from the request
     data = request.json
     map_string = data.get('map')
 
-    # Validate the input map
     if not map_string:
-        return jsonify({"instructions": None}), 400  # Bad Request if map is missing
-
-    # Process the map to find your location and bullets
-    instructions = find_dodge_instructions(map_string)
+        return jsonify({"instructions": None}), 400
     
+    instructions = find_dodge_instructions(map_string)
     return jsonify({"instructions": instructions})
 
 def find_dodge_instructions(map_string):
-    # Parse the input map and find your location and bullets
     lines = map_string.splitlines()
     player_position = None
     bullets = []
@@ -625,130 +620,88 @@ def find_dodge_instructions(map_string):
     if player_position is None:
         return None
 
-    # Check possible moves and dodge bullets
+    # Possible moves from current player position
     possible_moves = {
-        'u': (0, 1),
-        'd': (0, -1),
+        'u': (0, -1),
+        'd': (0, 1),
         'l': (-1, 0),
         'r': (1, 0)
     }
 
-    instructions = []
+    # Check each move and simulate bullet movement
+    safe_moves = []
     for direction, (dx, dy) in possible_moves.items():
         new_x = player_position[0] + dx
         new_y = player_position[1] + dy
 
-        # Check boundaries
+        # Check if the move is within map boundaries
         if 0 <= new_x < len(lines[0]) and 0 <= new_y < len(lines):
-            # Check if moving to this position would result in being hit by bullets
-            if not would_be_hit(new_x, new_y, bullets):
-                instructions.append(direction)
+            # Simulate bullet movement and check if the new position is safe
+            if not will_bullet_hit(new_x, new_y, bullets, len(lines), len(lines[0])):
+                safe_moves.append(direction)
 
-    # Return null if no valid instructions
-    return instructions if instructions else None
+    return safe_moves if safe_moves else None
 
-def would_be_hit(new_x, new_y, bullets):
-    # Check if moving to (new_x, new_y) will get hit by any bullets
+def will_bullet_hit(new_x, new_y, bullets, max_y, max_x):
+    # Check if the new position will be hit by any bullet after movement
     for bullet_x, bullet_y, direction in bullets:
-        # Calculate bullet position after the player moves
+        # Simulate the next position of the bullet based on its direction
         if direction == 'u':
-            bullet_y -= 1  # Bullet moves up
+            bullet_y = (bullet_y - 1) % max_y
         elif direction == 'd':
-            bullet_y += 1  # Bullet moves down
+            bullet_y = (bullet_y + 1) % max_y
         elif direction == 'l':
-            bullet_x -= 1  # Bullet moves left
+            bullet_x = (bullet_x - 1) % max_x
         elif direction == 'r':
-            bullet_x += 1  # Bullet moves right
+            bullet_x = (bullet_x + 1) % max_x
 
-        # Check if the bullet will hit the new position
+        # Check if the bullet's new position overlaps with the player's new position
         if bullet_x == new_x and bullet_y == new_y:
             return True
 
     return False
 
-def calculate_weight_and_new_colony(colony):
-    # Calculate the weight of the colony
-    weight = sum(int(digit) for digit in colony)
-    
-    # Calculate new colony digits based on the signatures
-    new_colony = []
-    for i in range(len(colony) - 1):
-        a = int(colony[i])
-        b = int(colony[i + 1])
-        
-        # Calculate signature
-        if a == b:
-            signature = 0
-        else:
-            signature = abs(a - b) if a > b else (10 - abs(a - b))
-        
-        # New digit to be added
-        new_digit = (weight + signature) % 10
-        new_colony.append(colony[i])
-        new_colony.append(str(new_digit))
-    
-    new_colony.append(colony[-1])  # add the last digit of the current colony
-    return ''.join(new_colony), weight
+# Helper function to check if two words differ by exactly one letter
+def differs_by_one(word1, word2):
+    diff_count = 0
+    for a, b in zip(word1, word2):
+        if a != b:
+            diff_count += 1
+        if diff_count > 1:
+            return False
+    return diff_count == 1
 
-def simulate_generations(colony, generations):
-    current_colony = colony
-    for _ in range(generations):
-        current_colony, _ = calculate_weight_and_new_colony(current_colony)
-    final_weight = sum(int(digit) for digit in current_colony)
-    return final_weight
+# Function to correct mistyped words using the dictionary
+def correct_mistypes(dictionary, mistypes):
+    corrections = []
+    for mistyped_word in mistypes:
+        # Iterate over each correct word in the dictionary
+        for correct_word in dictionary:
+            # Call differs_by_one and pass mistyped_word and correct_word
+            if differs_by_one(mistyped_word, correct_word):
+                corrections.append(correct_word)
+                break  # Once a match is found, no need to check further
+    return corrections
 
-@app.route('/digital-colony', methods=['POST'])
-def digital_colony():
-    data = request.get_json()
-    results = []
-    
-    for entry in data:
-        generations = entry['generations']
-        colony = entry['colony']
-        if generations == 10:
-            weight_after_generations = simulate_generations(colony, generations)
-            results.append(str(weight_after_generations))
-        else:
-            results.append("123456")
-    
-    return jsonify(results), 200
-
-@app.route('/efficient-hunter-kazuma', methods=['POST'])
-def efficient_hunter_kazuma():
+# POST endpoint to correct the mistyped words
+@app.route('/the-clumsy-programmer', methods=['POST'])
+def the_clumsy_programmer():
     data = request.json
-    results = []
-
-    for hunt in data:
-        monsters = hunt["monsters"]
-        n = len(monsters)
-        efficiency = 0
-        i = 0
-
-        while i < n:
-            # Find the best monster to attack
-            best_attack = -1
-            best_index = -1
-
-            for j in range(i, min(n, i + 3)):  # Look ahead up to 3 monsters
-                if monsters[j] > best_attack:
-                    best_attack = monsters[j]
-                    best_index = j
-
-            if best_index != -1:  # We found a monster to attack
-                if best_index > 0:
-                    fee = monsters[best_index - 1]  # Fee based on previous monster
-                else:
-                    fee = 0
-                
-                efficiency += max(0, best_attack - fee)
-                i = best_index + 1  # Move to next monster after the attack
-            else:
-                i += 1  # No attack possible, move on
-
-        results.append({"efficiency": efficiency})
+    result = []
     
-    return jsonify(results)
-
+    # Process each case in the input list
+    for case in data:
+        dictionary = case['dictionary']
+        mistypes = case['mistypes']
+        
+        # Correct the mistyped words
+        corrections = correct_mistypes(dictionary, mistypes)
+        
+        # Append the corrections to the result list
+        result.append({"corrections": corrections})
+    
+    # Return the result as a JSON response
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(debug=True)
