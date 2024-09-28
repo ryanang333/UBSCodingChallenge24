@@ -12,29 +12,25 @@ def efficient_hunter_kazuma():
             monsters = hunt["monsters"]
             n = len(monsters)
 
-            # Edge case for no monsters
+            # Edge case: No monsters
             if n == 0:
                 results.append({"efficiency": 0})
                 continue
 
-            # Initialize efficiencies
-            previous_efficiency = 0  # Efficiency up to the previous monster
-            current_efficiency = 0   # Efficiency up to the current monster
-            
-            for i in range(n):
-                # Calculate the potential attack earnings
-                attack_earning = monsters[i] - 1 if monsters[i] > 0 else 0
-                
-                # Determine the new current efficiency
-                # 1. Either we don't attack and carry forward the previous efficiency
-                # 2. Or we attack, which means we add current earnings to previous efficiency
-                new_efficiency = max(current_efficiency, previous_efficiency + attack_earning)
-                
-                # Update previous and current efficiencies for the next iteration
-                previous_efficiency = current_efficiency
-                current_efficiency = new_efficiency
+            # DP array to store maximum efficiency at each time frame
+            dp = [0] * (n + 2)  # We use n + 2 to avoid boundary checks
 
-            results.append({"efficiency": current_efficiency})
+            for i in range(n):
+                # Calculate the attack earning at time i
+                attack_earning = max(0, monsters[i] - 1)
+
+                # Carry forward the maximum efficiency
+                dp[i + 1] = max(dp[i + 1], dp[i])
+
+                # If Kazuma attacks at time i, he can earn attack_earning
+                dp[i + 2] = max(dp[i + 2], dp[i] + attack_earning)
+
+            results.append({"efficiency": max(dp)})
 
         return jsonify(results)
 
