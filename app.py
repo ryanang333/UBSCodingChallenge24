@@ -3,6 +3,30 @@ from flask import Flask, request, jsonify
 import requests, re
 app = Flask(__name__)
 
+@app.route('/ub5-flags')
+def get_ctfed():
+    response = {
+        "sanityScroll": {
+            "flag": "UB5{b'w3lc0m3_70_c7f_N0ttyB01'}"
+        },
+        "openAiExploration": {
+            "flag": "FLAG_CONTENT_HERE"
+        },
+        "dictionaryAttack": {
+            "flag": "UB5{FLAG_CONTENT_HERE}",
+            "password": "PASSWORD_HERE"
+        },
+        "pictureSteganography": {
+            "flagOne": "UB5-1{FLAG_ONE_CONTENTS_HERE}",
+            "flagTwo": "UB5-2{FLAG_TWO_CONTENTS_HERE}"
+        },
+        "reverseEngineeringTheDeal": {
+            "flag": "FLAG_CONTENT_HERE",
+            "key": "KEY_HERE"
+        }
+    }
+    return jsonify(response), 200
+
 @app.route('/coolcodehack', methods=['POST'])
 def get_hacked():
     response = {
