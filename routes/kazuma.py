@@ -7,10 +7,10 @@ def efficient_hunter_kazuma(monsters):
     dp = [0] * (n + 1)
 
     for i in range(1, n + 1):
-        # Calculate the maximum efficiency by considering two options:
-        # 1. Attack at the current time frame (i)
-        # 2. Attack at the previous time frame (i-1) and move to the current time frame (i)
-        dp[i] = max(dp[i - 1], dp[i - 2] + monsters[i - 1] - 1 if i > 1 else monsters[i - 1] - 1)
+        if i == 1:
+            dp[i] = max(0, monsters[i - 1] - 1)
+        else:
+            dp[i] = max(dp[i - 1], dp[i - 2] + monsters[i - 1] - 1)
 
     return {"efficiency": dp[n]}
 
