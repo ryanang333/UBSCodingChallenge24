@@ -10,31 +10,28 @@ def efficient_hunter_kazuma():
     for hunt in data:
         monsters = hunt["monsters"]
         n = len(monsters)
-        efficiency = 0
-        i = 0
+        
+        # Create a DP table to store maximum efficiency at each position
+        dp = [0] * (n + 1)
 
-        while i < n:
-            # Find the best monster to attack
-            best_attack = -1
-            best_index = -1
+        for i in range(n - 1, -1, -1):
+            # No attack case: carry forward the previous efficiency
+            dp[i] = dp[i + 1]
 
-            for j in range(i, min(n, i + 3)):  # Look ahead up to 3 monsters
-                if monsters[j] > best_attack:
-                    best_attack = monsters[j]
-                    best_index = j
-
-            if best_index != -1:  # We found a monster to attack
-                if best_index > 0:
-                    fee = monsters[best_index - 1]  # Fee based on previous monster
-                else:
-                    fee = 0
-                
-                efficiency += max(0, best_attack - fee)
-                i = best_index + 1  # Move to next monster after the attack
+            # Evaluate attack on the current monster
+            attack_value = monsters[i]
+            fee = monsters[i - 1] if i > 0 else 0
+            
+            # Calculate the potential efficiency
+            net_gain = max(0, attack_value - fee)
+            
+            # If we attack the current monster
+            if i + 2 < n:
+                dp[i] = max(dp[i], net_gain + dp[i + 2])  # Skip the next monster
             else:
-                i += 1  # No attack possible, move on
+                dp[i] = max(dp[i], net_gain)  # No monsters left to skip
 
-        results.append({"efficiency": efficiency})
+        results.append({"efficiency": dp[0]})  # The maximum efficiency starting from the first monster
     
     return jsonify(results)
 
