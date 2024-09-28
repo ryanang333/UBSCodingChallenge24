@@ -9,9 +9,12 @@ def hello_world():
 
 @app.route('/klotski', methods=['POST'])
 def klotski_route():
+    ans = []
     if request.is_json:
         data = request.get_json()
-        klotski(data.board, data.moves)
+        for el in data:
+            ans.append(klotski(el.board, el.moves))
+        klotski(data[0].board, data[0].moves)
 
 def klotski(board, moves):
     #given a 5x4 box => can only slide vertically or horizontally
