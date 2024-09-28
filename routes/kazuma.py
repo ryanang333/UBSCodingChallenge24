@@ -1,35 +1,37 @@
-def max_gold(monsters):
-    n = len(monsters)
-    
-    if n == 0:  # No timeframes, no monsters, no gold
-        return 0
+from flask import Flask, request, jsonify
 
-    # dp_idle[t] = maximum earnings up to time t when idle
-    dp_idle = [0] * n  # Gold earned while Kazuma is idle or moving to rear
-    # dp_attack[t] = maximum earnings if Kazuma attacks at time t
-    dp_attack = [0] * n  # Gold earned from attack at time t
+app = Flask(__name__)
+
+@app.route('/efficient-hunter-kazuma', methods=['POST'])
+def efficient_hunter_kazuma():
+    data = request.json
+    results = []
     
-    for t in range(1, n):
-        # Case 1: Stay idle at time t (carry forward earnings)
-        dp_idle[t] = dp_idle[t - 1]  # Just remain idle, carry forward the previous earnings
+    for hunt in data:
+        monsters = hunt["monsters"]
+        n = len(monsters)
+        efficiency = 0
+        i = 0
         
-        # Case 2: Prepare at t-1 and attack at t
-        if t > 0:
-            # Kazuma can prepare at t-1 and attack at t if it is beneficial
-            earnings_from_attack = monsters[t]
-            protection_cost = monsters[t - 1]  # Pay for protection during preparation at t-1
-            net_earnings = earnings_from_attack - protection_cost
+        while i < n:
+            if i < n-1 and monsters[i+1] > monsters[i]:  # Look ahead for better attack timing
+                i += 1  # Move to the rear, skip this time frame
+                continue
             
-            # Update dp_attack if this attack is beneficial
-            dp_attack[t] = max(dp_attack[t], dp_idle[t - 1] + net_earnings)
-            
-            # After attacking, Kazuma has to move to the rear, carry forward the max value
-            if t + 1 < n:  # Ensure we don't go out of bounds
-                dp_idle[t + 1] = max(dp_idle[t + 1], dp_attack[t])
+            if monsters[i] > 0:  # Prepare to attack if there are monsters
+                if i + 1 < n and monsters[i] > monsters[i+1]:
+                    attack = monsters[i]
+                    fee = monsters[i-1] if i > 0 else 0  # Fee based on monsters at previous time
+                    efficiency += max(0, attack - fee)  # Calculate net gold gain
+                    i += 2  # Skip the cooldown time after attack
+                else:
+                    i += 1  # No attack, continue to the next frame
+            else:
+                i += 1  # Move to the rear if no monsters
 
-    # Return the best possible earnings
-    return max(dp_idle[n - 1], dp_attack[n - 1])
+        results.append({"efficiency": efficiency})
+    
+    return jsonify(results)
 
-# Example usage:
-monsters = [1, 4, 5, 0, 4]
-print(max_gold(monsters))  # Output: 7
+if __name__ == '__main__':
+    app.run(debug=True)
