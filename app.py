@@ -785,34 +785,33 @@ def efficient_hunter_kazuma():
         for hunt in data:
             monsters = hunt["monsters"]
             n = len(monsters)
-            efficiency_threshold = 1000  # Set your desired efficiency threshold
 
             if n == 0:
                 results.append({"efficiency": 0})
                 continue
 
-            # Initialize variables to track efficiencies and costs
-            prev_efficiency = 0  # Efficiency from the previous time frame
-            curr_efficiency = 0  # Current efficiency calculation
+            if n == 1:
+                results.append({"efficiency": max(0, monsters[0])})
+                continue
 
-            for i in range(n):
-                # Calculate the attack value considering the previous monster count
-                attack = max(0, monsters[i] - (monsters[i - 1] if i > 0 else 0))
-                
-                # Calculate the cost for hiring adventurers
-                cost = monsters[i - 1] if i > 0 else 0
-                
-                # Calculate potential new efficiency
-                new_efficiency = prev_efficiency + attack - cost
+            # Initialize variables for the DP calculation
+            prev_efficiency_2 = 0  # Efficiency for two steps before
+            prev_efficiency_1 = max(0, monsters[0])  # Efficiency for the previous step
 
-                # Ensure the new efficiency does not exceed the threshold
-                if new_efficiency < efficiency_threshold:
-                    curr_efficiency = max(curr_efficiency, new_efficiency)
+            for i in range(1, n):
+                attack = max(0, monsters[i] - monsters[i - 1]) if i > 0 else monsters[i]
 
-                # Update previous efficiency for the next iteration
-                prev_efficiency = curr_efficiency
+                # Compute the current efficiency by considering two choices:
+                # 1. Skip attacking this monster and take the previous efficiency (prev_efficiency_1)
+                # 2. Attack this monster and add the efficiency from two steps back (prev_efficiency_2 + attack)
+                current_efficiency = max(prev_efficiency_1, prev_efficiency_2 + attack)
 
-            results.append({"efficiency": curr_efficiency})
+                # Update the previous efficiencies for the next iteration
+                prev_efficiency_2 = prev_efficiency_1
+                prev_efficiency_1 = current_efficiency
+
+            # Append the final efficiency for this hunt
+            results.append({"efficiency": prev_efficiency_1})
 
         return jsonify(results)
 
