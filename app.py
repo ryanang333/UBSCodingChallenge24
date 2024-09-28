@@ -264,46 +264,32 @@ def calculate_letter_frequencies(possible_words):
         letter_count.update(word)
     return letter_count
 
-def score_word(word, letter_frequencies):
-    """Score the word based on letter frequencies and unique letters."""
-    score = sum(letter_frequencies[letter] for letter in set(word))  # Frequency score
-    unique_letter_count = len(set(word))  # Unique letters count
-    return score + unique_letter_count  # Combine scores
-
-def filter_possible_words(possible_words, guess_history, evaluation_history):
-    """Filter possible words based on guess history and feedback."""
-    for guess, evaluation in zip(guess_history, evaluation_history):
-        new_possible_words = set()
-        for word in possible_words:
-            match = True
-            for i, feedback in enumerate(evaluation):
-                if feedback == 'O' and word[i] != guess[i]:
-                    match = False
-                    break
-                elif feedback == 'X' and (guess[i] not in word or word[i] == guess[i]):
-                    match = False
-                    break
-                elif feedback == '-' and guess[i] in word:
-                    match = False
-                    break
-            if match:
-                new_possible_words.add(word)
-        possible_words = new_possible_words
-    return possible_words
-
 def get_next_guess(guess_history, evaluation_history, possible_words):
     """Determine the next guess based on guess history and feedback."""
     if not possible_words:
-        return random.choice(WORD_LIST)  # Fallback to a random guess
+        # If no possible words remain, fallback to a random guess
+        return random.choice(WORD_LIST)
 
     # Calculate letter frequencies to prioritize the next guess
     letter_frequencies = calculate_letter_frequencies(possible_words)
 
-    # Score all possible words and sort them by score
-    scored_words = [(word, score_word(word, letter_frequencies)) for word in possible_words]
-    scored_words.sort(key=lambda x: x[1], reverse=True)
+    # Sort possible words by the sum of their letter frequencies
+    sorted_words = sorted(possible_words, key=lambda word: sum(letter_frequencies[letter] for letter in set(word)), reverse=True)
+    
+    # Filter possible words based on feedback from previous guesses
+    for guess, evaluation in zip(guess_history, evaluation_history):
+        for i, feedback in enumerate(evaluation):
+            if feedback == 'O':
+                # The letter is in the correct position
+                sorted_words = [word for word in sorted_words if word[i] == guess[i]]
+            elif feedback == 'X':
+                # The letter is in the word but not in the correct position
+                sorted_words = [word for word in sorted_words if guess[i] in word and word[i] != guess[i]]
+            elif feedback == '-':
+                # The letter is not in the word
+                sorted_words = [word for word in sorted_words if guess[i] not in word]
 
-    return scored_words[0][0]  # Return the best guess based on scores
+    return sorted_words[0]  # Return the best guess based on frequencies
 
 @app.route('/wordle-game', methods=['POST'])
 def wordle_game():
@@ -316,13 +302,24 @@ def wordle_game():
         possible_words = set(WORD_LIST)  # Start with all possible words
 
         if guess_history and evaluation_history:
-            possible_words = filter_possible_words(possible_words, guess_history, evaluation_history)
+            for guess, evaluation in zip(guess_history, evaluation_history):
+                for i, feedback in enumerate(evaluation):
+                    if feedback == 'O':
+                        # The letter is in the correct position
+                        possible_words = {word for word in possible_words if word[i] == guess[i]}
+                    elif feedback == 'X':
+                        # The letter is in the word but not in the correct position
+                        possible_words = {word for word in possible_words if guess[i] in word and word[i] != guess[i]}
+                    elif feedback == '-':
+                        # The letter is not in the word
+                        possible_words = {word for word in possible_words if guess[i] not in word}
 
         next_guess = get_next_guess(guess_history, evaluation_history, possible_words)
         return jsonify({"guess": next_guess})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
 
 
 @app.route('/tourist', methods=['POST'])
