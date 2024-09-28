@@ -80,6 +80,10 @@ def wordle_game():
 
 @app.route('/tourist', methods=['POST'])
 def tourist(input_dict, starting_point, time_limit):
+    data = request.get_json()
+    input_dict = data.get('input_dict')
+    starting_point = data.get('starting_point')
+    time_limit = data.get('time_limit')
     # Constants (subway lines, travel times)
     subway_stations = {
         "Tokyo Metro Ginza Line": [
