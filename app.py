@@ -257,27 +257,34 @@ WORD_LIST =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abat
 import random
 import math
 from collections import Counter
+def calculate_letter_frequencies(possible_words):
+    """Calculate the frequency of each letter in the possible words."""
+    letter_count = Counter()
+    for word in possible_words:
+        letter_count.update(word)
+    return letter_count
+
 def get_feedback(guess, answer):
-    """Evaluate the guess against the answer and return feedback."""
-    feedback = ['-'] * 5  # Initialize feedback list
-    answer_copy = list(answer)  # Copy of answer to track used letters
+    """Generate feedback for a guess against the answer."""
+    feedback = ['-'] * 5
+    answer_copy = list(answer)
 
     # First pass for correct positions
     for i in range(5):
         if guess[i] == answer[i]:
-            feedback[i] = 'O'  # Correct letter and position
-            answer_copy[i] = None  # Remove the letter from consideration
+            feedback[i] = 'O'
+            answer_copy[i] = None  # Remove letter from consideration
 
-    # Second pass for correct letters in wrong positions
+    # Second pass for letters in wrong positions
     for i in range(5):
         if feedback[i] == '-' and guess[i] in answer_copy:
-            feedback[i] = 'X'  # Correct letter but wrong position
-            answer_copy[answer_copy.index(guess[i])] = None  # Remove the letter from consideration
+            feedback[i] = 'X'
+            answer_copy[answer_copy.index(guess[i])] = None  # Remove letter from consideration
 
     return ''.join(feedback)
 
 def filter_possible_words(guess, feedback, possible_words):
-    """Filter the list of possible words based on the feedback from the guess."""
+    """Filter possible words based on the guess and feedback received."""
     for i, char in enumerate(feedback):
         if char == 'O':
             possible_words = [word for word in possible_words if word[i] == guess[i]]
@@ -288,7 +295,7 @@ def filter_possible_words(guess, feedback, possible_words):
     return possible_words
 
 def calculate_information_gain(word, possible_words):
-    """Calculate how much information this guess would provide."""
+    """Calculate the expected information gain of guessing a word."""
     frequency = Counter()
     for candidate in possible_words:
         feedback = get_feedback(word, candidate)
@@ -303,14 +310,15 @@ def calculate_information_gain(word, possible_words):
 
 def get_next_guess(guess_history, evaluation_history):
     """Determine the next guess based on guess history and feedback."""
-    possible_words = WORD_LIST[:]
+    possible_words = list(WORD_LIST)  # Start with all possible words
 
     # Filter possible words based on previous guesses and feedback
-    for guess, feedback in zip(guess_history, evaluation_history):
-        possible_words = filter_possible_words(guess, feedback, possible_words)
+    for guess, evaluation in zip(guess_history, evaluation_history):
+        possible_words = filter_possible_words(guess, evaluation, possible_words)
 
     if not possible_words:
-        return random.choice(WORD_LIST)  # Random guess if no options
+        # If no possible words remain, fallback to a random guess
+        return random.choice(WORD_LIST)
 
     # Evaluate potential guesses based on information gain
     best_guess = max(possible_words, key=lambda word: calculate_information_gain(word, possible_words))
@@ -324,12 +332,15 @@ def wordle_game():
         guess_history = data.get("guessHistory", [])
         evaluation_history = data.get("evaluationHistory", [])
 
+        if not isinstance(guess_history, list) or not isinstance(evaluation_history, list):
+            return jsonify({"error": "Invalid input format"}), 400
+
         next_guess = get_next_guess(guess_history, evaluation_history)
         return jsonify({"guess": next_guess})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-
+    
 
 @app.route('/tourist', methods=['POST'])
 def tourist():
