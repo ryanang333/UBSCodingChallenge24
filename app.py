@@ -583,14 +583,18 @@ def lab_work():
     return jsonify(results)
 @app.route('/dodge', methods=['POST'])
 def dodge():
+    # Ensure the request has the correct Content-Type
+    if request.content_type != 'application/json':
+        return jsonify({"error": "Content-Type must be application/json"}), 415  # Unsupported Media Type
+    
     # Get the map from the request
     data = request.json
     map_string = data.get('map')
-    
+
     # Validate the input map
     if not map_string:
         return jsonify({"instructions": None}), 400  # Bad Request if map is missing
-    
+
     # Process the map to find your location and bullets
     instructions = find_dodge_instructions(map_string)
     
