@@ -4,40 +4,41 @@ app = Flask(__name__)
 
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
-    data = request.json
-    results = []        
-    for hunt in data:
-        monsters = hunt["monsters"]
-        n = len(monsters)
-        efficiency = 0
-        i = 0
-        if n == 1:
-            results.append({"efficiency": 0})
-            continue
-        while i < n:
-            # Skip cooldown time if the next monster is stronger
-            if i < n - 1 and monsters[i + 1] > monsters[i]:
-                i += 1
+    try:
+        data = request.json
+        results = []
+
+        for hunt in data:
+            monsters = hunt["monsters"]
+            n = len(monsters)
+
+            if n == 1:
+                results.append({"efficiency": 0})
                 continue
-            
-            # Check if there are monsters to attack
-            if monsters[i] > 0:
-                # Calculate fee and attack if conditions are met
+
+            # Initialize a DP array for maximum efficiency
+            dp = [0] * n
+
+            for i in range(n):
+                # Base case: If Kazuma attacks here
                 fee = monsters[i - 1] if i > 0 else 0
-                attack = monsters[i]
+                dp[i] = max(dp[i], max(0, monsters[i] - fee))  # Attack now
 
-                if i + 1 < n and attack > monsters[i + 1]:
-                    efficiency += max(0, attack - fee)
-                    i += 2  # Skip cooldown time after attack
-                else:
-                    efficiency += max(0, attack - fee)  # Attack even if not skipping
-                    i += 1  # Move to next time frame
-            else:
-                i += 1  # Move to next time frame if no monsters
+                # If Kazuma was able to attack last time
+                if i > 0:
+                    # Move to rear from previous attack
+                    dp[i] = max(dp[i], dp[i - 1])
 
-        results.append({"efficiency": efficiency})
-    
-    return jsonify(results)
+                # Check if he can attack again after cooldown
+                if i > 1 and monsters[i - 1] > 0:
+                    dp[i] = max(dp[i], dp[i - 2] + max(0, monsters[i] - monsters[i - 1]))
+
+            results.append({"efficiency": max(dp)})
+
+        return jsonify(results)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
