@@ -7,6 +7,75 @@ app = Flask(__name__)
 def hello_world():
     return 'Hello, World!'
 
+
+from collections import deque
+
+@app.route('/bugfixer/p1', methods=['POST'])
+def bobby_bugger():
+    ans = []
+    if request.is_json:
+        data = request.get_json()
+        for line in data:
+            ans.append(bobby1(line['time'], line['prerequisites']))
+    
+    return jsonify(ans), 200
+
+def bobby1(time, prereq):
+    n = len(time)
+    adj = [[] for _ in range(n)]
+
+    for req in prereq:
+        adj[req[0] - 1].append(req[1] - 1) 
+
+    print("Topological sorting of the graph:", end=" ")
+    result = topological_sort(adj, n)
+
+    if not result:
+        return 0
+    
+    min_time = [0] * n
+
+    for vertex in result:
+        min_time[vertex] += time[vertex]
+
+        for adjacent in adj[vertex]:
+            min_time[adjacent] = max(min_time[adjacent], min_time[vertex])
+
+    total_time = max(min_time)
+    
+    return total_time
+
+
+def topological_sort(adj, V):
+    # Vector to store indegree of each vertex
+    indegree = [0] * V
+    for i in range(V):
+        for vertex in adj[i]:
+            indegree[vertex] += 1
+
+    # Queue to store vertices with indegree 0
+    q = deque()
+    for i in range(V):
+        if indegree[i] == 0:
+            q.append(i)
+    result = []
+    while q:
+        node = q.popleft()
+        result.append(node)
+        # Decrease indegree of adjacent vertices as the current node is in topological order
+        for adjacent in adj[node]:
+            indegree[adjacent] -= 1
+            # If indegree becomes 0, push it to the queue
+            if indegree[adjacent] == 0:
+                q.append(adjacent)
+
+    # Check for cycle
+    if len(result) != V:
+        print("Graph contains cycle!")
+        return []
+    return result
+
+
 @app.route('/klotski', methods=['POST'])
 def klotski_route():
     ans = []
