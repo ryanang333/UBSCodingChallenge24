@@ -257,7 +257,6 @@ WORD_LIST =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abat
 import random
 import math
 from collections import Counter
-
 def calculate_letter_frequencies(possible_words):
     """Calculate the frequency of each letter in the possible words."""
     letter_count = Counter()
@@ -265,11 +264,21 @@ def calculate_letter_frequencies(possible_words):
         letter_count.update(word)
     return letter_count
 
-def score_word(word, letter_frequencies):
+def calculate_positional_frequencies(possible_words):
+    """Calculate letter frequencies by position."""
+    positional_count = [Counter() for _ in range(5)]  # Assuming 5-letter words
+    for word in possible_words:
+        for i, letter in enumerate(word):
+            positional_count[i][letter] += 1
+    return positional_count
+
+def score_word(word, letter_frequencies, positional_frequencies):
     """Score the word based on letter frequencies and unique letters."""
     score = sum(letter_frequencies[letter] for letter in set(word))  # Frequency score
     unique_letter_count = len(set(word))  # Unique letters count
-    return score + unique_letter_count  # Combine scores
+    positional_score = sum(positional_frequencies[i][letter] for i, letter in enumerate(word))
+    
+    return score + unique_letter_count + positional_score  # Combine scores
 
 def filter_possible_words(possible_words, guess_history, evaluation_history):
     """Filter possible words based on guess history and feedback."""
@@ -295,18 +304,17 @@ def filter_possible_words(possible_words, guess_history, evaluation_history):
 def get_next_guess(guess_history, evaluation_history, possible_words):
     """Determine the next guess based on guess history and feedback."""
     if not possible_words:
-        # If no possible words remain, fallback to a random guess
-        return random.choice(WORD_LIST)
+        return random.choice(WORD_LIST)  # Fallback to a random guess
 
-    # Calculate letter frequencies to prioritize the next guess
+    # Calculate letter frequencies and positional frequencies to prioritize the next guess
     letter_frequencies = calculate_letter_frequencies(possible_words)
+    positional_frequencies = calculate_positional_frequencies(possible_words)
 
     # Score all possible words and sort them by score
-    scored_words = [(word, score_word(word, letter_frequencies)) for word in possible_words]
+    scored_words = [(word, score_word(word, letter_frequencies, positional_frequencies)) for word in possible_words]
     scored_words.sort(key=lambda x: x[1], reverse=True)
 
-    # Return the best guess based on scores
-    return scored_words[0][0]
+    return scored_words[0][0]  # Return the best guess based on scores
 
 @app.route('/wordle-game', methods=['POST'])
 def wordle_game():
@@ -318,7 +326,6 @@ def wordle_game():
 
         possible_words = set(WORD_LIST)  # Start with all possible words
 
-        # Filter possible words based on previous guesses and evaluations
         if guess_history and evaluation_history:
             possible_words = filter_possible_words(possible_words, guess_history, evaluation_history)
 
@@ -327,6 +334,7 @@ def wordle_game():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
 
 @app.route('/tourist', methods=['POST'])
 def tourist():
