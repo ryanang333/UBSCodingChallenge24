@@ -785,7 +785,8 @@ def efficient_hunter_kazuma(monsters):
         elif i == 1:
             dp[i] = max(0, monsters[i] - 1)
         else:
-            dp[i] = max(dp[i-1], dp[i-2] + max(0, monsters[i] - 1))
+            attack = max(0, monsters[i] - monsters[i-1] - 1)
+            dp[i] = max(dp[i-1], dp[i-2] + attack)
 
     return {"efficiency": dp[n-1]}
 
