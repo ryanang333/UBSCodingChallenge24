@@ -798,7 +798,7 @@ def efficient_hunter_kazuma():
 
             # Fill the DP array
             for i in range(2, n):
-                attack = max(0, monsters[i] - monsters[i-1] - 1)
+                attack = max(0, monsters[i] - 1)
                 dp[i] = max(dp[i - 1], dp[i - 2] + attack)
 
             results.append({"efficiency": dp[n - 1]})
