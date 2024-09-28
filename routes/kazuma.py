@@ -12,29 +12,25 @@ def efficient_hunter_kazuma():
             monsters = hunt["monsters"]
             n = len(monsters)
 
-            if n == 0:
+            if n == 1:
                 results.append({"efficiency": 0})
                 continue
 
-            if n == 1:
-                results.append({"efficiency": monsters[0]})
-                continue
+            # Initialize the DP array with size n
+            dp = [0] * n
 
-            # Optimized DP: We don't need to store the entire DP array
-            # We only need to keep track of the last two states (dp[i-1] and dp[i-2])
-            prev2 = 0  # This will store dp[i-2]
-            prev1 = monsters[0]  # This will store dp[i-1]
+            # Base cases
+            dp[0] = 0  # No efficiency on the first step (since Kazuma rests initially)
+            dp[1] = max(0, monsters[1] - monsters[0])  # Efficiency after first attack, only if it yields positive
 
-            for i in range(1, n):
-                # Calculate the current dp[i] using the recurrence relation
-                current = max(prev1, prev2 + monsters[i])
-                
-                # Move the window forward for the next iteration
-                prev2 = prev1
-                prev1 = current
+            # Fill the DP array using optimized logic
+            for i in range(2, n):
+                # Attack option: consider current attack and rest one step before, with a check on monster size
+                attack = max(0, monsters[i] - monsters[i - 1])
+                dp[i] = max(dp[i - 1], dp[i - 2] + attack)
 
-            # The result is the maximum efficiency at the last time step
-            results.append({"efficiency": prev1})
+            # Append the maximum efficiency result for this hunt
+            results.append({"efficiency": dp[n - 1]})
 
         return jsonify(results)
 
