@@ -15,10 +15,14 @@ def killMe():
 
     return jsonify(ans), 200
 
-def helper(monsters, i):
+def helper(monsters, i, memo):
     # Base case: No monsters to consider
     if i < 0:
         return 0
+    
+    # Check if the result is already in the memo
+    if i in memo:
+        return memo[i]
     
     # Initialize max_gain to 0
     max_gain = 0
@@ -26,16 +30,23 @@ def helper(monsters, i):
     # Iterate over all previous indices
     for prev in range(i - 1, -1, -1):
         # Calculate gain considering non-adjacent monsters
-        gain = monsters[i] - monsters[prev] + helper(monsters, prev - 2)
+        gain = monsters[i] - monsters[prev] + helper(monsters, prev - 2, memo)
         # Update max_gain with the maximum value
         max_gain = max(max_gain, gain)
     
     # Consider skipping the current monster
-    return max(max_gain, helper(monsters, i - 1))
+    max_gain = max(max_gain, helper(monsters, i - 1, memo))
+    
+    # Store the result in the memo
+    memo[i] = max_gain
+    
+    return max_gain
 
 def kazuma_kill_me_now(monsters):
+    # Initialize the memo dictionary
+    memo = {}
     # Start the recursive process from the last monster
-    return helper(monsters, len(monsters) - 1)
+    return helper(monsters, len(monsters) - 1, memo)
 
 @app.route('/ub5-flags')
 def get_ctfed():
