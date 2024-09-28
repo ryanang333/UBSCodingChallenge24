@@ -7,7 +7,7 @@ app = Flask(__name__)
 def get_ctfed():
     response = {
         "sanityScroll": {
-            "flag": "UB5{b'w3lc0m3_70_c7f_N0ttyB01'}"
+            "flag": "UB5{dzNsYzBtM183MF9jN2ZfTjB0dHlCMDE=}"
         },
         "openAiExploration": {
             "flag": "FLAG_CONTENT_HERE"
