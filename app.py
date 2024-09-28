@@ -7,6 +7,72 @@ app = Flask(__name__)
 def hello_world():
     return 'Hello, World!'
 
+@app.route('/klotski', methods=['POST'])
+def klotski_route():
+    if request.is_json:
+        data = request.get_json()
+        klotski(data.board, data.moves)
+
+def klotski(board, moves):
+    #given a 5x4 box => can only slide vertically or horizontally
+    positionMap = board_to_map(board, 5, 4)
+    print('before positions: ', positionMap)
+    for i in range(0, len(moves), 2):
+        currMove = moves[i: i+2]
+        currPosition = positionMap[currMove[0]]
+        if currMove[1] == 'N':
+            for i in range(len(currPosition)):
+                tup = currPosition[i]
+                coord = tuple([tup[0], tup[1] - 1])
+                positionMap[currMove[0]][i] = coord 
+        elif currMove[1] == 'S':
+            for i in range(len(currPosition)):
+                tup = currPosition[i]
+                coord = tuple([tup[0], tup[1] + 1])
+                positionMap[currMove[0]][i] = coord 
+        elif currMove[1] == 'E':
+            for i in range(len(currPosition)):
+                tup = currPosition[i]
+                coord = tuple([tup[0] + 1, tup[1]])
+                positionMap[currMove[0]][i] = coord 
+        elif currMove[1] == 'W':
+            for i in range(len(currPosition)):
+                tup = currPosition[i]
+                coord = tuple([tup[0] - 1, tup[1]])
+                positionMap[currMove[0]][i] = coord         
+    print('after positions: ', positionMap)
+    return map_to_board(positionMap, 5, 4)
+
+def board_to_map(board, rows, cols):
+    char_map = {}
+    
+    # Traverse the board string
+    for i, char in enumerate(board):
+        if char != '@':  # Skip the spaces
+            x = i % cols  # Column number
+            y = i // cols  # Row number
+            
+            # Add coordinates to the map for the character
+            if char not in char_map:
+                char_map[char] = []
+            char_map[char].append((x, y))
+    
+    return char_map
+
+def map_to_board(char_map, rows, cols):
+    # Initialize the board with '@' (spaces)
+    board = ['@'] * (rows * cols)
+    
+    # Traverse the map and place characters back into their coordinates
+    for char, coordinates in char_map.items():
+        for (x, y) in coordinates:
+            index = y * cols + x  # Calculate the index in the 1D array
+            board[index] = char
+    
+    # Join the list into a string and return it
+    return ''.join(board)
+
+
 # meaningpedia_resp = requests.get(
 #     "https://meaningpedia.com/5-letter-words?show=all")
 
@@ -125,11 +191,12 @@ def wordle_game():
 
 
 @app.route('/tourist', methods=['POST'])
-def tourist(input_dict, starting_point, time_limit):
+def tourist():
     data = request.get_json()
     input_dict = data.get('input_dict')
     starting_point = data.get('starting_point')
     time_limit = data.get('time_limit')
+
     # Constants (subway lines, travel times)
     subway_stations = {
         "Tokyo Metro Ginza Line": [
@@ -222,7 +289,7 @@ def tourist(input_dict, starting_point, time_limit):
             "Kachidoki", "Shiodome", "Daimon", "Shiodome", "Tsukishima"
         ]
     }
-    
+
     travelling_time_betw_stations = {
         "Tokyo Metro Ginza Line": 2,
         "Tokyo Metro Marunouchi Line": 3,
@@ -249,26 +316,25 @@ def tourist(input_dict, starting_point, time_limit):
     if starting_line is None:
         return jsonify({"error": "Invalid starting point"})
     
-    # All possible stations
+    # All possible stations in the starting line
     stations_list = subway_stations[starting_line]
     
     # Step 2: Pathfinding (maximize satisfaction within time constraints)
     def find_max_satisfaction_path():
         best_path = []
         max_satisfaction = 0
-        
-        # Initialize variables for exploration (visit each station)
+
         for i in range(len(stations_list)):
             current_path = [starting_point]
             current_satisfaction = input_dict[starting_point][0]  # Initial satisfaction
             time_spent = input_dict[starting_point][1]  # Time spent at starting point
             
-            # Explore further stations
             for j in range(i+1, len(stations_list)):
                 next_station = stations_list[j]
                 travel_time = travelling_time_betw_stations[starting_line]
                 required_time = input_dict[next_station][1]
                 
+                # Check if adding the next station exceeds the time limit
                 if time_spent + travel_time + required_time <= time_limit:
                     time_spent += travel_time + required_time
                     current_satisfaction += input_dict[next_station][0]
@@ -283,10 +349,8 @@ def tourist(input_dict, starting_point, time_limit):
         
         return best_path, max_satisfaction
     
-    # Step 3: Run pathfinding and determine the best path
     best_path, max_satisfaction = find_max_satisfaction_path()
-    
-    # Step 4: Return the result in JSON format
+
     return jsonify({
         "best_path": best_path,
         "max_satisfaction": max_satisfaction
