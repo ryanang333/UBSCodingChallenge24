@@ -775,42 +775,37 @@ def the_clumsy_programmer():
         # General exception handling
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
+def calculate_efficiency(monsters):
+    n = len(monsters)
+    if n == 0:
+        return 0
+    
+    # Initialize dp array
+    dp = [0] * (n + 2)  # Extra space for ease of calculation
+
+    # Fill dp array from back to front
+    for i in range(n - 1, -1, -1):
+        # Option 1: Attack now
+        attack_now = monsters[i] + (dp[i + 2] if i + 2 < n else 0) - 1
+        # Option 2: Move to rear
+        move_to_rear = dp[i + 1]
+        
+        # Choose the best option
+        dp[i] = max(attack_now, move_to_rear)
+
+    return max(dp[0], 0)  # Ensure non-negative efficiency
 
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
-    try:
-        data = request.json
-        results = []
+    data = request.get_json()
+    output_data = []
 
-        for hunt in data:
-            monsters = hunt["monsters"]
-            n = len(monsters)
+    for entry in data:
+        monsters = entry["monsters"]
+        efficiency = calculate_efficiency(monsters)
+        output_data.append({"efficiency": efficiency})
 
-            if n == 1:
-                results.append({"efficiency": 0})
-                continue
-
-            # Initialize the DP array with size n
-            dp = [0] * n
-
-            # Base cases
-            dp[0] = 0  # No efficiency on the first step (since Kazuma rests initially)
-            dp[1] = max(0, monsters[1] - monsters[0])  # Efficiency after first attack, only if it yields positive
-
-            # Fill the DP array using optimized logic
-            for i in range(2, n):
-                # Attack option: consider current attack and rest one step before, with a check on monster size
-                attack = max(0, monsters[i] - monsters[i - 1])
-                dp[i] = max(dp[i - 1], dp[i - 2] + attack)
-
-            # Append the maximum efficiency result for this hunt
-            results.append({"efficiency": dp[n - 1]})
-
-        return jsonify(results)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-    
+    return jsonify(output_data)
 
     
 @app.route('/mailtime', methods=['POST'])
