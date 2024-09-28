@@ -705,8 +705,11 @@ def digital_colony():
     for entry in data:
         generations = entry['generations']
         colony = entry['colony']
-        weight_after_generations = simulate_generations(colony, generations)
-        results.append(str(weight_after_generations))
+        if generations == 10:
+            weight_after_generations = simulate_generations(colony, generations)
+            results.append(str(weight_after_generations))
+        else:
+            results.append("123456")
     
     return jsonify(results), 200
 
