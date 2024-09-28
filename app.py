@@ -257,8 +257,6 @@ WORD_LIST =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abat
 import random
 import math
 from collections import Counter
-import random
-from collections import Counter
 
 def calculate_letter_frequencies(possible_words):
     """Calculate the frequency of each letter in the possible words."""
@@ -303,6 +301,19 @@ def wordle_game():
         evaluation_history = data.get("evaluationHistory", [])
 
         possible_words = set(WORD_LIST)  # Start with all possible words
+
+        if guess_history and evaluation_history:
+            for guess, evaluation in zip(guess_history, evaluation_history):
+                for i, feedback in enumerate(evaluation):
+                    if feedback == 'O':
+                        # The letter is in the correct position
+                        possible_words = {word for word in possible_words if word[i] == guess[i]}
+                    elif feedback == 'X':
+                        # The letter is in the word but not in the correct position
+                        possible_words = {word for word in possible_words if guess[i] in word and word[i] != guess[i]}
+                    elif feedback == '-':
+                        # The letter is not in the word
+                        possible_words = {word for word in possible_words if guess[i] not in word}
 
         next_guess = get_next_guess(guess_history, evaluation_history, possible_words)
         return jsonify({"guess": next_guess})
