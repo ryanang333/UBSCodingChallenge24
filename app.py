@@ -776,6 +776,7 @@ def the_clumsy_programmer():
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
 
+
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
     try:
@@ -786,30 +787,34 @@ def efficient_hunter_kazuma():
             monsters = hunt["monsters"]
             n = len(monsters)
 
-            if n == 1:
+            if n == 0:
+                results.append({"efficiency": 0})
+                continue
+            elif n == 1:
                 results.append({"efficiency": 0})
                 continue
 
-            # Initialize the DP array with size n
-            dp = [0] * n
+            # Initialize the previous two states for DP
+            prev2 = 0  # Equivalent to dp[i-2]
+            prev1 = max(0, monsters[0])  # Equivalent to dp[i-1] (only attack first monster)
 
-            # Base cases
-            dp[0] = 0  # No efficiency on the first step (since Kazuma rests initially)
-            dp[1] = max(0, monsters[1] - monsters[0])  # Efficiency after first attack, only if it yields positive
+            for i in range(1, n):
+                attack = max(0, monsters[i] - monsters[i - 1])  # Calculate attack value
+                
+                # Current efficiency is the max of skipping the current monster or attacking it
+                current = max(prev1, prev2 + attack)
 
-            # Fill the DP array using optimized logic
-            for i in range(2, n):
-                # Attack option: consider current attack and rest one step before, with a check on monster size
-                attack = max(0, monsters[i] - monsters[i - 1])
-                dp[i] = max(dp[i - 1], dp[i - 2] + attack)
+                # Update previous states for next iteration
+                prev2 = prev1
+                prev1 = current
 
-            # Append the maximum efficiency result for this hunt
-            results.append({"efficiency": dp[n - 1]})
+            results.append({"efficiency": prev1})  # The last computed efficiency
 
         return jsonify(results)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
     
 
     
