@@ -1,44 +1,68 @@
 from flask import Flask, request, jsonify
-import json
 
 app = Flask(__name__)
 
-def calculate_weight_and_new_colony(colony):
-    # Calculate the weight of the colony
-    weight = sum(int(digit) for digit in colony)
-    
-    # Calculate new colony digits based on the signatures
-    new_colony = []
-    for i in range(len(colony) - 1):
-        a = int(colony[i])
-        b = int(colony[i + 1])
-        
-        # Calculate signature
-        if a == b:
-            signature = 0
-        else:
-            signature = abs(a - b) if a > b else (10 - abs(a - b))
-        
-        # New digit to be added
-        new_digit = (weight + signature) % 10
-        new_colony.append(colony[i])
-        new_colony.append(str(new_digit))
-    
-    new_colony.append(colony[-1])  # add the last digit of the current colony
-    return ''.join(new_colony), weight
+# Memoization dictionary
+memo = {}
 
+# Precompute the signatures for all pairs of digits (00 to 99)
+def precompute_signatures():
+    signatures = {}
+    for i in range(10):
+        for j in range(10):
+            if i == j:
+                signatures[(i, j)] = 0
+            else:
+                diff = abs(i - j)
+                signatures[(i, j)] = diff if i > j else 10 - diff
+    return signatures
+
+signatures = precompute_signatures()
+
+# Function to calculate the new digit for a given pair
+def calculate_new_digit(pair, weight):
+    i, j = pair
+    signature = signatures[(i, j)]
+    return (weight + signature) % 10
+
+# Simulate one generation of the colony growth
+def simulate_generation(colony, weight):
+    new_colony = []
+    # Generate new digits for each pair
+    for i in range(len(colony) - 1):
+        pair = (int(colony[i]), int(colony[i + 1]))
+        new_digit = calculate_new_digit(pair, weight)
+        new_colony.append(colony[i])  # Add original digit
+        new_colony.append(str(new_digit))  # Add new digit produced by the pair
+
+    new_colony.append(colony[-1])  # Add the last digit (which has no pair)
+    return ''.join(new_colony)
+
+# Function to update the running weight of the colony
+def update_weight(colony):
+    return sum(int(digit) for digit in colony)
+
+# Main simulation function
 def simulate_generations(colony, generations):
     current_colony = colony
+    weight = update_weight(current_colony)
+
     for _ in range(generations):
-        current_colony, _ = calculate_weight_and_new_colony(current_colony)
-    final_weight = sum(int(digit) for digit in current_colony)
-    return final_weight
+        if current_colony in memo:
+            current_colony, weight = memo[current_colony]
+        else:
+            new_colony = simulate_generation(current_colony, weight)
+            weight = update_weight(new_colony)
+            memo[current_colony] = (new_colony, weight)
+            current_colony = new_colony
+
+    return weight
 
 @app.route('/digital-colony', methods=['POST'])
 def digital_colony():
     data = request.get_json()
     results = []
-    
+
     for entry in data:
         generations = entry['generations']
         colony = entry['colony']
