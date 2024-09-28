@@ -852,276 +852,266 @@ def average_response_time():
     return jsonify(average_response_times)
 
 
-# This will store variable assignments
 variables = {}
 
-def puts(arg):
-    if isinstance(arg, str):
-        return arg
-    raise ValueError("Invalid argument for puts; expected a string.")
+# List to store output
+outputs = []
 
-def str_func(arg):
-    return str(arg) if arg is not None else "null"
+def execute_expression(expr, line_number):
+    global variables, outputs
+    # Remove outer parentheses and split by space
+    if not (expr.startswith("(") and expr.endswith(")")):
+        raise ValueError(f"ERROR at line {line_number}")
 
-def concat(arg1, arg2):
-    if isinstance(arg1, str) and isinstance(arg2, str):
-        return arg1 + arg2
-    raise ValueError("Invalid arguments for concat; both must be strings.")
-
-def eval_expression(expression):
-    expression = expression.strip()
-
-    # Check if the expression is a direct string (no function call)
-    if expression.startswith('"') and expression.endswith('"'):
-        return expression[1:-1]  # Return the string without quotes
-
-    # Check if the expression is a plain string without parentheses
-    if not expression.startswith('(') or not expression.endswith(')'):
-        return expression  # Return the plain string directly
-
-    # Remove outer parentheses and split by whitespace
-    parts = expression[1:-1].strip().split()
+    expr = expr[1:-1].strip()
+    parts = expr.split(" ")
     
-    if not parts:
-        raise ValueError("Unrecognized expression")
-    
-    func_name = parts[0]  # The first part is the function name
-    args = parts[1:]  # Remaining parts are arguments
-    
+    func_name = parts[0]
+    args = parts[1:]
+
+    # Handle printing
     if func_name == "puts":
-        if len(args) == 1:
-            arg = eval_arg(args[0])
-            return puts(arg)
-        else:
-            raise ValueError("puts function requires exactly 1 argument.")
-    
-    elif func_name == "str":
-        if len(args) == 1:
-            arg = eval_arg(args[0])
-            return str_func(arg)
-        else:
-            raise ValueError("str function requires exactly 1 argument.")
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        arg_value = evaluate_argument(args[0], line_number)
+        outputs.append(arg_value)  # Append to outputs
+        return None
 
-    elif func_name == "concat":
-        if len(args) == 2:
-            arg1 = eval_arg(args[0])
-            arg2 = eval_arg(args[1])
-            return concat(arg1, arg2)
-        else:
-            raise ValueError("concat function requires exactly 2 arguments.")
-    
-    raise ValueError("Unrecognized function name or incorrect argument count.")
-
-def eval_arg(arg):
-    arg = arg.strip()
-    if arg in variables:
-        return variables[arg]  # Return the variable's value
-    if arg.startswith('"') and arg.endswith('"'):
-        return arg[1:-1]  # Return the string without quotes
-    elif arg.isdigit() or (arg[1:].isdigit() and arg[0] == '-'):  # Handle integers
-        return int(arg)
-    raise ValueError(f"Invalid argument: {arg}")
-
-# @app.route('/lisp-parser', methods=['POST'])
-# def lisp_parser():
-#     data = request.get_json()
-#     expressions = data.get("expressions", [])
-    
-#     output = []
-#     for i, expr in enumerate(expressions, 1):
-#         try:
-#             result = eval_expression(expr)
-#             if result is not None:
-#                 output.append(result)
-#         except Exception as e:
-#             output.append(f"ERROR: {str(e)} at line {i}")
-
-#     return jsonify({"output": output})
-
-
-def raise_error(line):
-    return f"ERROR at line {line}"
-
-def validate_numeric_args(args, line):
-    """Validates that all arguments are numeric."""
-    try:
-        return [float(arg) for arg in args], None
-    except ValueError:
-        return None, raise_error(line)
-
-def validate_string_args(args, line):
-    """Validates that all arguments are strings."""
-    if all(isinstance(arg, str) for arg in args):
-        return args, None
-    else:
-        return None, raise_error(line)
-
-def eval_lisp_expression(expression, line_number):
-    tokens = expression.replace('(', '').replace(')', '').split()
-
-    if not tokens:
-        return None, None 
-
-    function = tokens[0]
-    
-    if function == "puts":
-        if len(tokens) != 2 or not tokens[1].startswith('"') or not tokens[1].endswith('"'):
-            return None, raise_error(line_number)
-        return tokens[1][1:-1], None  
-    
-    elif function == "set":
-        if len(tokens) != 3:
-            return None, raise_error(line_number)
-        var_name = tokens[1]
-        var_value = tokens[2]
+    # Handle variable setting
+    elif func_name == "set":
+        if len(args) != 2:
+            raise ValueError(f"ERROR at line {line_number}")
+        var_name, value = args
         if var_name in variables:
-            return None, raise_error(line_number)
-        variables[var_name] = var_value
-        return None, None
-    
-    elif function == "concat":
-        if len(tokens) != 3:
-            return None, raise_error(line_number)
-        args, error = validate_string_args(tokens[1:], line_number)
-        if error:
-            return None, error
-        return args[0] + args[1], None
-    
-    elif function == "lowercase":
-        if len(tokens) != 2:
-            return None, raise_error(line_number)
-        args, error = validate_string_args([tokens[1]], line_number)
-        if error:
-            return None, error
-        return args[0].lower(), None
-    
-    elif function == "uppercase":
-        if len(tokens) != 2:
-            return None, raise_error(line_number)
-        args, error = validate_string_args([tokens[1]], line_number)
-        if error:
-            return None, error
-        return args[0].upper(), None
-    
-    elif function == "replace":
-        if len(tokens) != 4:
-            return None, raise_error(line_number)
-        args, error = validate_string_args(tokens[1:], line_number)
-        if error:
-            return None, error
-        return args[0].replace(args[1], args[2]), None
+            raise ValueError(f"ERROR at line {line_number}")
+        variables[var_name] = evaluate_argument(value, line_number)
+        return None
 
-    elif function == "substring":
-        if len(tokens) != 4:
-            return None, raise_error(line_number)
-        source, start, end = tokens[1], tokens[2], tokens[3]
-        if not source.startswith('"') or not source.endswith('"'):
-            return None, raise_error(line_number)
+    # Handle string functions
+    elif func_name == "concat":
+        if len(args) != 2:
+            raise ValueError(f"ERROR at line {line_number}")
+        return concat(args, line_number)
+
+    elif func_name == "lowercase":
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        return lowercase(args[0], line_number)
+
+    elif func_name == "uppercase":
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        return uppercase(args[0], line_number)
+
+    elif func_name == "replace":
+        if len(args) != 3:
+            raise ValueError(f"ERROR at line {line_number}")
+        return replace(args, line_number)
+
+    elif func_name == "substring":
+        if len(args) != 3:
+            raise ValueError(f"ERROR at line {line_number}")
+        return substring(args, line_number)
+
+    # Handle number functions
+    elif func_name == "add":
+        return add(args, line_number)
+
+    elif func_name == "subtract":
+        return subtract(args, line_number)
+
+    elif func_name == "multiply":
+        return multiply(args, line_number)
+
+    elif func_name == "divide":
+        return divide(args, line_number)
+
+    elif func_name == "abs":
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        return abs_function(args[0], line_number)
+
+    elif func_name == "max":
+        return max_function(args, line_number)
+
+    elif func_name == "min":
+        return min_function(args, line_number)
+
+    elif func_name == "gt":
+        return gt(args, line_number)
+
+    elif func_name == "lt":
+        return lt(args, line_number)
+
+    elif func_name == "equal":
+        return equal(args, line_number)
+
+    elif func_name == "not_equal":
+        return not_equal(args, line_number)
+
+    elif func_name == "str":
+        if len(args) != 1:
+            raise ValueError(f"ERROR at line {line_number}")
+        return str_function(args[0], line_number)
+
+    else:
+        raise ValueError(f"ERROR at line {line_number}")
+
+
+def evaluate_argument(arg, line_number):
+    if arg in variables:
+        return variables[arg]
+    elif arg.isdigit() or (arg[0] == '-' and arg[1:].isdigit()):
+        return int(arg)
+    elif '.' in arg:
         try:
-            start = int(start)
-            end = int(end)
+            return float(arg)
         except ValueError:
-            return None, raise_error(line_number)
-        if start < 0 or end < 0 or start >= len(source) or end > len(source):
-            return None, raise_error(line_number)
-        return source[start:end], None
+            raise ValueError(f"ERROR at line {line_number}")
+    elif arg == "true":
+        return True
+    elif arg == "false":
+        return False
+    elif arg == "null":
+        return None
+    elif arg.startswith('"') and arg.endswith('"'):
+        return arg[1:-1]  # Return string without quotes
+    else:
+        raise ValueError(f"ERROR at line {line_number}")
 
-    elif function == "add":
-        if len(tokens) < 3:
-            return None, raise_error(line_number)
-        numbers, error = validate_numeric_args(tokens[1:], line_number)
-        if error:
-            return None, error
-        return str(round(sum(numbers), 4)), None
 
-    elif function == "subtract":
-        if len(tokens) != 3:
-            return None, raise_error(line_number)
-        numbers, error = validate_numeric_args(tokens[1:], line_number)
-        if error:
-            return None, error
-        return str(round(numbers[0] - numbers[1], 4)), None
+# Define each operation
+def concat(args, line_number):
+    str1 = evaluate_argument(args[0], line_number)
+    str2 = evaluate_argument(args[1], line_number)
+    return str1 + str2
 
-    elif function == "multiply":
-        if len(tokens) < 3:
-            return None, raise_error(line_number)
-        numbers, error = validate_numeric_args(tokens[1:], line_number)
-        if error:
-            return None, error
-        result = 1
-        for num in numbers:
-            result *= num
-        return str(round(result, 4)), None
 
-    elif function == "divide":
-        if len(tokens) != 3:
-            return None, raise_error(line_number)
-        numbers, error = validate_numeric_args(tokens[1:], line_number)
-        if error:
-            return None, error
-        if numbers[1] == 0:
-            return None, raise_error(line_number)
-        result = numbers[0] / numbers[1]
-        if isinstance(numbers[0], int) and isinstance(numbers[1], int):
-            return str(int(result)), None
-        return str(round(result, 4)), None
+def lowercase(arg, line_number):
+    str_val = evaluate_argument(arg, line_number)
+    return str_val.lower()
 
-    # Comparison and Boolean functions
-    elif function == "equal":
-        if len(tokens) != 3:
-            return None, raise_error(line_number)
-        if tokens[1] == tokens[2]:
-            return "true", None
-        return "false", None
-    
-    elif function == "not_equal":
-        if len(tokens) != 3:
-            return None, raise_error(line_number)
-        if tokens[1] != tokens[2]:
-            return "true", None
-        return "false", None
-    
-    elif function == "gt":
-        if len(tokens) != 3:
-            return None, raise_error(line_number)
-        numbers, error = validate_numeric_args(tokens[1:], line_number)
-        if error:
-            return None, error
-        return "true" if numbers[0] > numbers[1] else "false", None
 
-    elif function == "lt":
-        if len(tokens) != 3:
-            return None, raise_error(line_number)
-        numbers, error = validate_numeric_args(tokens[1:], line_number)
-        if error:
-            return None, error
-        return "true" if numbers[0] < numbers[1] else "false", None
+def uppercase(arg, line_number):
+    str_val = evaluate_argument(arg, line_number)
+    return str_val.upper()
 
-    # Variable access
-    elif function == "str":
-        if len(tokens) != 2:
-            return None, raise_error(line_number)
-        var = tokens[1]
-        if var in variables:
-            return str(variables[var]), None
-        return str(var), None
 
-    return None, raise_error(line_number)
+def replace(args, line_number):
+    src = evaluate_argument(args[0], line_number)
+    target = evaluate_argument(args[1], line_number)
+    replacement = evaluate_argument(args[2], line_number)
+    return src.replace(target, replacement)
+
+
+def substring(args, line_number):
+    src = evaluate_argument(args[0], line_number)
+    start = evaluate_argument(args[1], line_number)
+    end = evaluate_argument(args[2], line_number)
+    if not isinstance(src, str) or not isinstance(start, int) or not isinstance(end, int):
+        raise ValueError(f"ERROR at line {line_number}")
+    return src[start:end]
+
+
+def add(args, line_number):
+    return sum(evaluate_argument(arg, line_number) for arg in args)
+
+
+def subtract(args, line_number):
+    if len(args) != 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    num1 = evaluate_argument(args[0], line_number)
+    num2 = evaluate_argument(args[1], line_number)
+    return num1 - num2
+
+
+def multiply(args, line_number):
+    result = 1
+    for arg in args:
+        result *= evaluate_argument(arg, line_number)
+    return result
+
+
+def divide(args, line_number):
+    if len(args) != 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    num1 = evaluate_argument(args[0], line_number)
+    num2 = evaluate_argument(args[1], line_number)
+    if num2 == 0:
+        raise ValueError(f"ERROR at line {line_number}")
+    return num1 // num2 if isinstance(num1, int) and isinstance(num2, int) else num1 / num2
+
+
+def abs_function(arg, line_number):
+    num = evaluate_argument(arg, line_number)
+    return abs(num)
+
+
+def max_function(args, line_number):
+    if len(args) < 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    return max(evaluate_argument(arg, line_number) for arg in args)
+
+
+def min_function(args, line_number):
+    if len(args) < 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    return min(evaluate_argument(arg, line_number) for arg in args)
+
+
+def gt(args, line_number):
+    if len(args) != 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    num1 = evaluate_argument(args[0], line_number)
+    num2 = evaluate_argument(args[1], line_number)
+    return num1 > num2
+
+
+def lt(args, line_number):
+    if len(args) != 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    num1 = evaluate_argument(args[0], line_number)
+    num2 = evaluate_argument(args[1], line_number)
+    return num1 < num2
+
+
+def equal(args, line_number):
+    if len(args) != 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    arg1 = evaluate_argument(args[0], line_number)
+    arg2 = evaluate_argument(args[1], line_number)
+    return arg1 == arg2
+
+
+def not_equal(args, line_number):
+    if len(args) != 2:
+        raise ValueError(f"ERROR at line {line_number}")
+    arg1 = evaluate_argument(args[0], line_number)
+    arg2 = evaluate_argument(args[1], line_number)
+    return arg1 != arg2
+
+
+def str_function(arg, line_number):
+    value = evaluate_argument(arg, line_number)
+    return str(value)
+
 
 @app.route('/lisp-parser', methods=['POST'])
 def lisp_parser():
-    data = request.json.get('expressions', [])
-    output = []
-    
-    for i, line in enumerate(data):
-        result, error = eval_lisp_expression(line, i + 1)
-        if error:
-            output.append(error)
-            break
-        if result:
-            output.append(result)
-    
-    return jsonify({"output": output})
+    global outputs
+    outputs = []  # Reset outputs for each request
+    try:
+        data = request.get_json()
+        expressions = data.get('expressions', [])
+        for i, expression in enumerate(expressions, start=1):
+            execute_expression(expression, i)
+        return jsonify({"output": outputs})
+
+    except ValueError as e:
+        return jsonify({"output": []}), 400
+    except Exception as e:
+        return jsonify({"output": []}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
