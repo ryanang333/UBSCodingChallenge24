@@ -185,7 +185,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # This could be replaced with a more extensive list of possible words.
-list_possible_answers =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abate', 
+word_list =['aalii', 'aaron', 'abaca', 'abaft', 'abamp', 'abase', 'abash', 'abate', 
 'abbot', 'abele', 'abets', 'abhor', 'abide', 'abies', 'ables', 'abode', 'abohm', 'abort', 'about',
 'above', 'abuse', 'abuts', 'abuzz', 'abyes', 'abysm', 'abyss', 'accra', 
 'acerb', 'acids', 'ackee', 'acmes', 'acned', 'acnes', 'acold', 'acorn', 'acres', 
@@ -314,70 +314,6 @@ def get_next_guess(guess_history, evaluation_history):
         return random.choice(list(possible_words))  # Return a random valid guess
     else:
         return random.choice(word_list)  # Fallback to a random word if no valid guesses
-
-class RuleUnknownLetter(Rule):
-    code = '?'
-
-    def apply(self, words, matched_counts):
-        # Return the original list of words without filtering
-        return words
-    
-RuleCls = {'O': RuleMatch, 'X': RuleContainsElsewhere, '-': RuleExcludedLetter, '?': RuleUnknownLetter}
-
-
-class Wordle:
-    def __init__(self, target_word=None, word_length=5):
-        self.target_word = target_word
-        self.word_length = word_length
-        if target_word:
-            self.word_length = len(target_word)
-
-        self.words = list_possible_answers
-
-    def assess_word(self, test_word):
-        target = list(self.target_word)
-        matched_counts = defaultdict(int)
-        rules = [None] * self.word_length
-
-        # Check for exact matches and excluded letters.
-        for i, letter in enumerate(test_word):
-            if letter == target[i]:
-                rules[i] = RuleMatch(letter, i)
-                target[i] = '*'
-                matched_counts[letter] += 1
-            elif letter not in target:
-                rules[i] = RuleExcludedLetter(letter, i)
-
-        # Check for letters contained elsewhere.
-        for i, letter in enumerate(test_word):
-            if rules[i]:
-                continue
-            if letter in target:
-                rules[i] = RuleContainsElsewhere(letter, i)
-                target[target.index(letter)] = '*'
-                matched_counts[letter] += 1
-            else:
-                rules[i] = RuleExcludedLetter(letter, i)
-
-        rule_str = ''.join(rule.code for rule in rules)
-        return rules, matched_counts, rule_str
-
-    def parse_rule_codes(self, rule_codes, test_word):
-        rules = []
-        matched_counts = defaultdict(int)
-        for i, letter in enumerate(test_word):
-            rules.append(RuleCls[rule_codes[i]](letter, i))
-            if rule_codes[i] in '+=':
-                matched_counts[letter] += 1
-        return rules, matched_counts
-
-    def apply_rules(self, rules, matched_counts):
-        for rule in rules:
-            self.words = rule.apply(self.words, matched_counts)
-
-    def get_test_word(self):
-        return random.choice(self.words)
-
 
 @app.route('/wordle-game', methods=['POST'])
 def wordle_game():
