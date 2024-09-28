@@ -4,26 +4,26 @@ from datetime import datetime,timedelta
 import requests, re
 app = Flask(__name__)
 
-@app.route('/efficient-hunter-kazuma', methods=['POST'])
-def killMe():
-    data = request.json
-    ans = []
+# @app.route('/efficient-hunter-kazuma', methods=['POST'])
+# def killMe():
+#     data = request.json
+#     ans = []
 
-    for line in data:
-        monsters = line.get('monsters')
-        ans.append({"efficiency": kazuma(monsters)})
+#     for line in data:
+#         monsters = line.get('monsters')
+#         ans.append({"efficiency": kazuma(monsters)})
 
-    return jsonify(ans), 200
+#     return jsonify(ans), 200
 
-def kazuma(monsters):
-    dp = [0] * len(monsters)
-    for i in range(1, len(monsters)):
-        for prev in range(i - 1, -1, -1):
-            gain = monsters[i] - monsters[prev] + \
-                (dp[prev - 2] if prev - 2 >= 0 else 0)
-            # print(i, prev, gain, dp[prev - 2] if prev - 2 >= 0 else 0)
-            dp[i] = max(dp[i-1], gain, dp[i])
-    return {"efficiency": dp[-1]}
+# def kazuma(monsters):
+#     dp = [0] * len(monsters)
+#     for i in range(1, len(monsters)):
+#         for prev in range(i - 1, -1, -1):
+#             gain = monsters[i] - monsters[prev] + \
+#                 (dp[prev - 2] if prev - 2 >= 0 else 0)
+#             # print(i, prev, gain, dp[prev - 2] if prev - 2 >= 0 else 0)
+#             dp[i] = max(dp[i-1], gain, dp[i])
+#     return {"efficiency": dp[-1]}
 
 @app.route('/ub5-flags')
 def get_ctfed():
@@ -847,32 +847,27 @@ def calculate_efficiency(monsters):
     return dp[n - 1]  # The last entry has the maximum efficiency
 
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
-def efficient_hunter_kazuma():
-    try:
-        # Validate and parse input data
-        data = request.json
-        if not isinstance(data, list):
-            return jsonify({"error": "Input should be a list of hunts"}), 400
+def eval_kazuma():
+    data = request.get_json()
+    logging.info("data sent for evaluation {}".format(data))
+    res = []
+    for item in data:
+        logger.info("item sent for evaluation {}".format(item))
+        monsters = item.get("monsters")
+        result = kazuma(monsters)
+        res.append(result)
+    return jsonify(res)
 
-        results = []
 
-        for hunt in data:
-            # Validate the structure of each hunt
-            if not isinstance(hunt, dict) or "monsters" not in hunt:
-                return jsonify({"error": "Each hunt should be a dictionary with a 'monsters' key"}), 400
-            
-            monsters = hunt["monsters"]
-            if not isinstance(monsters, list) or not all(isinstance(m, int) for m in monsters):
-                return jsonify({"error": "Monsters should be a list of integers"}), 400
-            
-            # Calculate efficiency for the current hunt using the helper function
-            efficiency = calculate_efficiency(monsters)
-            results.append({"efficiency": efficiency})
-
-        return jsonify(results)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
+def kazuma(monsters):
+    dp = [0] * len(monsters)
+    for i in range(1, len(monsters)):
+        for prev in range(i - 1, -1, -1):
+            gain = monsters[i] - monsters[prev] + \
+                (dp[prev - 2] if prev - 2 >= 0 else 0)
+            # print(i, prev, gain, dp[prev - 2] if prev - 2 >= 0 else 0)
+            dp[i] = max(dp[i-1], gain, dp[i])
+    return {"efficiency": dp[-1]}
     
 @app.route('/mailtime', methods=['POST'])
 def average_response_time():
