@@ -11,33 +11,19 @@ def killMe():
 
     for line in data:
         monsters = line.get('monsters')
-        ans.append({"efficiency": kazuma_iterative_dp(monsters)})
+        ans.append({"efficiency": kazuma(monsters)})
 
     return jsonify(ans), 200
 
-def kazuma_iterative_dp(monsters):
-    n = len(monsters)
-    if n == 0:
-        return 0
-
-    # Initialize the dp array
-    dp = [0] * n
-
-    # Iterate through each monster starting from the second one
-    for i in range(1, n):
-        max_gain = 0
-        # Iterate over all previous indices
+def kazuma(monsters):
+    dp = [0] * len(monsters)
+    for i in range(1, len(monsters)):
         for prev in range(i - 1, -1, -1):
-            # Calculate gain considering non-adjacent monsters
-            gain = monsters[i] - monsters[prev]
-            if prev - 2 >= 0:
-                gain += dp[prev - 2]
-            # Update max_gain with the maximum value
-            max_gain = max(max_gain, gain)
-        # Store the maximum gain up to the current monster
-        dp[i] = max(dp[i - 1], max_gain)
-
-    return dp[-1]
+            gain = monsters[i] - monsters[prev] + \
+                (dp[prev - 2] if prev - 2 >= 0 else 0)
+            # print(i, prev, gain, dp[prev - 2] if prev - 2 >= 0 else 0)
+            dp[i] = max(dp[i-1], gain, dp[i])
+    return {"efficiency": dp[-1]}
 
 @app.route('/ub5-flags')
 def get_ctfed():
