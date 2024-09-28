@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import Flask, request, jsonify
-from datetime import datetime
+from datetime import datetime,timedelta
 import requests, re
 app = Flask(__name__)
 
@@ -775,54 +775,38 @@ def the_clumsy_programmer():
         # General exception handling
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
+def efficient_hunter_kazuma(monsters):
+    n = len(monsters)
+    dp = [[0] * 2 for _ in range(n + 1)]
+
+    for i in range(1, n + 1):
+        # Prepare Transmutation Circle
+        dp[i][0] = max(dp[i - 1][0], dp[i - 1][1] - monsters[i - 1])
+
+        # Attack
+        dp[i][1] = max(dp[i - 1][0] + monsters[i - 1] - 1, dp[i - 1][1])
+
+    # Find the maximum efficiency
+    max_efficiency = 0
+    for i in range(n + 1):
+        for j in range(2):
+            if dp[i][j] > max_efficiency:
+                max_efficiency = dp[i][j]
+
+    return {"efficiency": max_efficiency}
 
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
-def efficient_hunter_kazuma():
-    try:
-        data = request.json
-        results = []
+def efficient_hunter_kazuma_endpoint():
+    data = request.get_json()
+    results = [{"efficiency": efficient_hunter_kazuma(m["monsters"])["efficiency"]} for m in data]
+    return jsonify(results)
 
-        for hunt in data:
-            monsters = hunt["monsters"]
-            n = len(monsters)
-
-            # Edge case: No monsters
-            if n == 0:
-                results.append({"efficiency": 0})
-                continue
-
-            # DP array for tracking maximum efficiency
-            dp = [0] * (n + 1)  # n+1 to handle edge cases easily
-
-            for i in range(n):
-                # Update current state without action
-                dp[i + 1] = max(dp[i + 1], dp[i])  # Carry forward previous efficiency
-
-                # Check if Kazuma can attack
-                if monsters[i] > 0:
-                    attack_earning = monsters[i] - 1  # Earnings after paying adventurers
-
-                    # If Kazuma attacks at time i, he cannot attack at i + 1
-                    if i + 1 < n:  # Only update if there is a next time
-                        dp[i + 2] = max(dp[i + 2], dp[i] + attack_earning)
-                    else:
-                        dp[i + 1] = max(dp[i + 1], dp[i] + attack_earning)
-
-            # Maximum efficiency found
-            results.append({"efficiency": max(dp)})
-
-        return jsonify(results)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-    
 
     
 @app.route('/mailtime', methods=['POST'])
 def average_response_time():
     data = request.get_json()
 
-    # Prepare dictionaries to store response times and counts
     response_times = {user['name']: [] for user in data['users']}
     last_sent_time = {}
 
@@ -830,23 +814,249 @@ def average_response_time():
     for email in data['emails']:
         sender = email['sender']
         receiver = email['receiver']
+        subject = email['subject']
         time_sent = datetime.fromisoformat(email['timeSent'])
+        # # Check if the time zone offset is +01:00
+        # if time_sent.utcoffset() == timedelta(hours=1):
+        #     # Add one hour to account for daylight savings
+        #     time_sent -= timedelta(hours=1)
+        # Check if the email is a reply (subject starts with "RE:")
+        if subject.startswith("RE:"):
+            original_subject = subject[4:]  # Remove "RE: " prefix
+            if (receiver, original_subject) in last_sent_time:
+                # Calculate response time
+                print(sender)
+                print('this is time sent',time_sent)
+                print('this is time received',last_sent_time[(receiver, original_subject)])
+                response_time = (time_sent - last_sent_time[(receiver, original_subject)]).total_seconds()
+                response_times[sender].append(response_time)
         
-        if receiver in last_sent_time:
-            # Calculate response time
-            response_time = (time_sent - last_sent_time[receiver]).total_seconds()
-            response_times[receiver].append(response_time)
-
-        # Update the last sent time for the sender
-        last_sent_time[sender] = time_sent
+        # Update the last sent time for the subject and sender
+        last_sent_time[(sender, subject)] = time_sent
 
     # Calculate average response times
     average_response_times = {
         user: int(sum(times) / len(times)) if times else 0
         for user, times in response_times.items()
     }
-
     return jsonify(average_response_times)
+
+
+
+variables = {}
+
+def raise_error(line):
+    return f"ERROR at line {line}"
+
+def validate_numeric_args(args, line):
+    """Validates that all arguments are numeric."""
+    try:
+        return [float(arg) for arg in args], None
+    except ValueError:
+        return None, raise_error(line)
+
+def validate_string_args(args, line):
+    """Validates that all arguments are strings."""
+    if all(isinstance(arg, str) for arg in args):
+        return args, None
+    else:
+        return None, raise_error(line)
+    
+def is_numeric(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+def is_boolean(value):
+    return value in ["true", "false"]
+
+def is_string(value):
+    return value.startswith('"') and value.endswith('"')
+
+def parse_value(value):
+    """Converts a string representation into the correct data type."""
+    if is_numeric(value):
+        return float(value)
+    elif is_boolean(value):
+        return value == "true"  # Convert string "true" to Python True
+    elif value == "null":
+        return None
+    elif is_string(value):
+        return value[1:-1]  # Strip quotes for strings
+    elif value in variables:
+        return variables[value]  # Return variable value if defined
+    else:
+        return None  # Invalid or undefined variable
+  
+def concat(args, line_number):
+    if len(args) != 2 or not all(is_string(arg) for arg in args):
+        return None, raise_error(line_number, "concat expects two string arguments")
+    return args[0][1:-1] + args[1][1:-1], None  # Concatenate after stripping quotes
+
+def substring(args, line_number):
+    if len(args) != 3 or not is_string(args[0]) or not all(is_numeric(arg) for arg in args[1:]):
+        return None, raise_error(line_number, "substring expects a string and two numbers")
+    string, start, end = args[0][1:-1], int(float(args[1])), int(float(args[2]))
+    if start < 0 or end > len(string) or start > end:
+        return None, raise_error(line_number, "substring index out of range")
+    return string[start:end], None
+
+def add(args, line_number):
+    numbers, error = validate_numeric_args(args, line_number)
+    if error:
+        return None, error
+    return str(round(sum(numbers), 4)), None
+
+def divide(args, line_number):
+    if len(args) != 2:
+        return None, raise_error(line_number, "divide expects two arguments")
+    numbers, error = validate_numeric_args(args, line_number)
+    if error:
+        return None, error
+    if numbers[1] == 0:
+        return None, raise_error(line_number, "division by zero")
+    if numbers[0].is_integer() and numbers[1].is_integer():
+        return str(int(numbers[0] // numbers[1])), None  # Integer division
+    return str(round(numbers[0] / numbers[1], 4)), None  # Floating point division
+
+def equal(args, line_number):
+    if len(args) != 2:
+        return None, raise_error(line_number, "equal expects two arguments")
+    val1, val2 = parse_value(args[0]), parse_value(args[1])
+    if type(val1) != type(val2):
+        return "false", None
+    return "true" if val1 == val2 else "false", None
+
+def set_variable(args, line_number):
+    if len(args) != 2:
+        return None, raise_error(line_number, "set expects a variable name and a value")
+    var_name, value = args[0], args[1]
+    if var_name in variables:
+        return None, raise_error(line_number, "variable already exists")
+    variables[var_name] = parse_value(value)
+    return None, None
+
+def replace(args, line_number):
+    if len(args) != 3 or not all(is_string(arg) for arg in args):
+        return None, raise_error(line_number, "replace expects three string arguments")
+    source, target, replacement = args[0][1:-1], args[1][1:-1], args[2][1:-1]
+    return source.replace(target, replacement), None
+
+def subtract(args, line_number):
+    if len(args) != 2 or not all(is_numeric(arg) for arg in args):
+        return None, raise_error(line_number, "subtract expects two numeric arguments")
+    result = float(args[0]) - float(args[1])
+    return str(round(result, 4)), None
+
+def multiply(args, line_number):
+    numbers, error = validate_numeric_args(args, line_number)
+    if error:
+        return None, error
+    result = 1
+    for num in numbers:
+        result *= num
+    return str(round(result, 4)), None
+
+def gt(args, line_number):
+    if len(args) != 2 or not all(is_numeric(arg) for arg in args):
+        return None, raise_error(line_number, "gt expects two numeric arguments")
+    return "true" if float(args[0]) > float(args[1]) else "false", None
+
+def lt(args, line_number):
+    if len(args) != 2 or not all(is_numeric(arg) for arg in args):
+        return None, raise_error(line_number, "lt expects two numeric arguments")
+    return "true" if float(args[0]) < float(args[1]) else "false", None
+
+def eval_lisp_expression(expression, line_number):
+    tokens = expression.replace('(', '').replace(')', '').split()
+
+    if not tokens:
+        return None, None
+
+    function = tokens[0]
+
+    # Handle functions
+    if function == "puts":
+        if len(tokens) != 2 or not tokens[1].startswith('"') or not tokens[1].endswith('"'):
+            return None, raise_error(line_number)
+        return tokens[1][1:-1], None 
+    elif function == "set":
+        return set_variable(tokens[1:], line_number)
+    elif function == "concat":
+        return concat(tokens[1:], line_number)
+    elif function == "substring":
+        return substring(tokens[1:], line_number)
+    elif function == "add":
+        return add(tokens[1:], line_number)
+    elif function == "subtract":
+        return subtract(tokens[1:], line_number)
+    elif function == "multiply":
+        return multiply(tokens[1:], line_number)
+    elif function == "divide":
+        return divide(tokens[1:], line_number)
+    elif function == "replace":
+        return replace(tokens[1:], line_number)
+    elif function == "lowercase":
+        if len(tokens) != 2:
+            return None, raise_error(line_number)
+        args, error = validate_string_args([tokens[1]], line_number)
+        if error:
+            return None, error
+        return args[0].lower(), None
+    
+    elif function == "uppercase":
+        if len(tokens) != 2:
+            return None, raise_error(line_number)
+        args, error = validate_string_args([tokens[1]], line_number)
+        if error:
+            return None, error
+        return args[0].upper(), None
+    
+    elif function == "gt":
+        return gt(tokens[1:], line_number)
+    elif function == "lt":
+        return lt(tokens[1:], line_number)
+    elif function == "equal":
+        return equal(tokens[1:], line_number)
+    elif function == "not_equal":
+        if len(tokens) != 3:
+            return None, raise_error(line_number)
+        if tokens[1] != tokens[2]:
+            return "true", None
+        return "false", None
+    elif function == "str":
+        if len(tokens) != 2:
+            return None, raise_error(line_number)
+        var = tokens[1]
+        if var in variables:
+            return str(variables[var]), None
+        return str(var), None
+    
+    # If the function is unknown
+    return None, raise_error(line_number, f"unknown function '{function}'")
+@app.route('/lisp-parser', methods=['POST'])
+def lisp_parser():
+    data = request.json.get('expressions', [])
+    output = []
+    
+    for i, line in enumerate(data):
+        result, error = eval_lisp_expression(line, i + 1)
+        if error:
+            output.append(error)
+            break
+        if result:
+            output.append(result)
+    
+    return jsonify({"output": output})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
