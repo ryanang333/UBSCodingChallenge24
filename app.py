@@ -826,10 +826,10 @@ def average_response_time():
         receiver = email['receiver']
         subject = email['subject']
         time_sent = datetime.fromisoformat(email['timeSent'])
-        # Check if the time zone offset is +01:00
-        if time_sent.utcoffset() == timedelta(hours=1):
-            # Add one hour to account for daylight savings
-            time_sent -= timedelta(hours=1)
+        # # Check if the time zone offset is +01:00
+        # if time_sent.utcoffset() == timedelta(hours=1):
+        #     # Add one hour to account for daylight savings
+        #     time_sent -= timedelta(hours=1)
         # Check if the email is a reply (subject starts with "RE:")
         if subject.startswith("RE:"):
             original_subject = subject[4:]  # Remove "RE: " prefix
