@@ -507,10 +507,12 @@ def bugfixer():
     if not data or 'bugseq' not in data[0]:
         return jsonify({"error": "Invalid input"}), 400
 
-    bug_seq = data[0]['bugseq']
-    result = max_bugs_fixed(bug_seq)
+    result = []
+    for obj in data:
+        bug_seq = obj['bugseq']
+        result.append(max_bugs_fixed(bug_seq))
     
-    return jsonify([result]), 200
+    return jsonify(result), 200
 
 
 
