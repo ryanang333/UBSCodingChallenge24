@@ -7,6 +7,72 @@ app = Flask(__name__)
 def hello_world():
     return 'Hello, World!'
 
+@app.route('/klotski', methods=['POST'])
+def klotski_route():
+    if request.is_json:
+        data = request.get_json()
+        klotski(data.board, data.moves)
+
+def klotski(board, moves):
+    #given a 5x4 box => can only slide vertically or horizontally
+    positionMap = board_to_map(board, 5, 4)
+    print('before positions: ', positionMap)
+    for i in range(0, len(moves), 2):
+        currMove = moves[i: i+2]
+        currPosition = positionMap[currMove[0]]
+        if currMove[1] == 'N':
+            for i in range(len(currPosition)):
+                tup = currPosition[i]
+                coord = tuple([tup[0], tup[1] - 1])
+                positionMap[currMove[0]][i] = coord 
+        elif currMove[1] == 'S':
+            for i in range(len(currPosition)):
+                tup = currPosition[i]
+                coord = tuple([tup[0], tup[1] + 1])
+                positionMap[currMove[0]][i] = coord 
+        elif currMove[1] == 'E':
+            for i in range(len(currPosition)):
+                tup = currPosition[i]
+                coord = tuple([tup[0] + 1, tup[1]])
+                positionMap[currMove[0]][i] = coord 
+        elif currMove[1] == 'W':
+            for i in range(len(currPosition)):
+                tup = currPosition[i]
+                coord = tuple([tup[0] - 1, tup[1]])
+                positionMap[currMove[0]][i] = coord         
+    print('after positions: ', positionMap)
+    return map_to_board(positionMap, 5, 4)
+
+def board_to_map(board, rows, cols):
+    char_map = {}
+    
+    # Traverse the board string
+    for i, char in enumerate(board):
+        if char != '@':  # Skip the spaces
+            x = i % cols  # Column number
+            y = i // cols  # Row number
+            
+            # Add coordinates to the map for the character
+            if char not in char_map:
+                char_map[char] = []
+            char_map[char].append((x, y))
+    
+    return char_map
+
+def map_to_board(char_map, rows, cols):
+    # Initialize the board with '@' (spaces)
+    board = ['@'] * (rows * cols)
+    
+    # Traverse the map and place characters back into their coordinates
+    for char, coordinates in char_map.items():
+        for (x, y) in coordinates:
+            index = y * cols + x  # Calculate the index in the 1D array
+            board[index] = char
+    
+    # Join the list into a string and return it
+    return ''.join(board)
+
+
 # meaningpedia_resp = requests.get(
 #     "https://meaningpedia.com/5-letter-words?show=all")
 
