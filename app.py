@@ -4,6 +4,39 @@ from datetime import datetime,timedelta
 import requests, re
 app = Flask(__name__)
 
+@app.route('/efficient-hunter-kazuma', methods=['POST'])
+def killMe():
+    data = request.json
+    ans = []
+
+    for line in data:
+        monsters = line.get('monsters')
+        ans.append({"efficiency": kazuma_kill_me_now(monsters)})
+
+    return jsonify(ans), 200
+
+def helper(monsters, i):
+    # Base case: No monsters to consider
+    if i < 0:
+        return 0
+    
+    # Initialize max_gain to 0
+    max_gain = 0
+    
+    # Iterate over all previous indices
+    for prev in range(i - 1, -1, -1):
+        # Calculate gain considering non-adjacent monsters
+        gain = monsters[i] - monsters[prev] + helper(monsters, prev - 2)
+        # Update max_gain with the maximum value
+        max_gain = max(max_gain, gain)
+    
+    # Consider skipping the current monster
+    return max(max_gain, helper(monsters, i - 1))
+
+def kazuma_kill_me_now(monsters):
+    # Start the recursive process from the last monster
+    return helper(monsters, len(monsters) - 1)
+
 @app.route('/ub5-flags')
 def get_ctfed():
     response = {
