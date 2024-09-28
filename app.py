@@ -806,8 +806,6 @@ def efficient_hunter_kazuma():
         output_data.append({"efficiency": efficiency})
 
     return jsonify(output_data)
-
-
     
 @app.route('/mailtime', methods=['POST'])
 def average_response_time():
