@@ -776,57 +776,40 @@ def the_clumsy_programmer():
         return jsonify({"error": "An unexpected error occurred: " + str(e)}), 500
 
 
-def calculate_efficiency(monsters):
-    """Helper function to calculate maximum efficiency for given monsters."""
-    n = len(monsters)
-    
-    # If there are no monsters or only one monster, no attack is efficient
-    if n == 0 or (n == 1 and monsters[0] <= 0):
-        return 0
-
-    # Initialize the DP array
-    dp = [0] * n
-
-    # Fill the DP array based on the logic derived
-    for i in range(n):
-        # Case 1: Move to rear (don't attack this time frame)
-        if i > 0:
-            dp[i] = dp[i - 1]
-
-        # Case 2: Prepare a transmutation circle and attack this time frame
-        if i >= 1:  # Need at least one time frame to prepare
-            gain = monsters[i] - 1 if monsters[i] > 0 else 0
-            dp[i] = max(dp[i], dp[i - 2] + gain if i > 1 else gain)
-
-    return dp[n - 1]  # The last entry has the maximum efficiency
-
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
 def efficient_hunter_kazuma():
     try:
-        # Validate and parse input data
         data = request.json
-        if not isinstance(data, list):
-            return jsonify({"error": "Input should be a list of hunts"}), 400
-
         results = []
 
         for hunt in data:
-            # Validate the structure of each hunt
-            if not isinstance(hunt, dict) or "monsters" not in hunt:
-                return jsonify({"error": "Each hunt should be a dictionary with a 'monsters' key"}), 400
-            
             monsters = hunt["monsters"]
-            if not isinstance(monsters, list) or not all(isinstance(m, int) for m in monsters):
-                return jsonify({"error": "Monsters should be a list of integers"}), 400
-            
-            # Calculate efficiency for the current hunt using the helper function
-            efficiency = calculate_efficiency(monsters)
-            results.append({"efficiency": efficiency})
+            n = len(monsters)
+
+            if n == 1:
+                results.append({"efficiency": 0})
+                continue
+
+            # Initialize the DP array
+            dp = [0] * n
+
+            # Base cases
+            dp[0] = 0  # No monsters, no efficiency
+            if monsters[0] > 0:
+                dp[1] = max(0, monsters[0] - 0)  # Only attack if there's something to defeat
+
+            # Fill the DP array
+            for i in range(1, n):
+                attack = max(0, monsters[i] - monsters[i - 1]) if i > 0 else monsters[i]
+                dp[i] = max(dp[i - 1], (dp[i - 2] + attack) if i > 1 else attack)
+
+            results.append({"efficiency": dp[n - 1]})
 
         return jsonify(results)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+
     
 @app.route('/mailtime', methods=['POST'])
 def average_response_time():
