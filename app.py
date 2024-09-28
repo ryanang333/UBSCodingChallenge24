@@ -642,19 +642,15 @@ def find_dodge_instructions(map_string):
 def would_be_hit(new_x, new_y, bullets):
     # Check if moving to (new_x, new_y) will get hit by any bullets
     for bullet_x, bullet_y, direction in bullets:
-        # Calculate bullet position based on its direction
-        if direction == 'u' and bullet_y > new_y:  # Bullet moves up
-            if bullet_x == new_x and (bullet_y - 1 == new_y or bullet_y == new_y):
-                return True
-        if direction == 'd' and bullet_y < new_y:  # Bullet moves down
-            if bullet_x == new_x and (bullet_y + 1 == new_y or bullet_y == new_y):
-                return True
-        if direction == 'l' and bullet_x > new_x:  # Bullet moves left
-            if bullet_y == new_y and (bullet_x - 1 == new_x or bullet_x == new_x):
-                return True
-        if direction == 'r' and bullet_x < new_x:  # Bullet moves right
-            if bullet_y == new_y and (bullet_x + 1 == new_x or bullet_x == new_x):
-                return True
+        # Calculate the new position of the bullet based on its movement
+        if direction == 'u' and bullet_y == new_y + 1 and bullet_x == new_x:  # Bullet moves up
+            return True
+        if direction == 'd' and bullet_y == new_y - 1 and bullet_x == new_x:  # Bullet moves down
+            return True
+        if direction == 'l' and bullet_x == new_x + 1 and bullet_y == new_y:  # Bullet moves left
+            return True
+        if direction == 'r' and bullet_x == new_x - 1 and bullet_y == new_y:  # Bullet moves right
+            return True
 
     return False
 
