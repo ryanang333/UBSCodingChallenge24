@@ -294,19 +294,25 @@ def filter_possible_words(guess, feedback, possible_words):
             possible_words = [word for word in possible_words if guess[i] not in word]
     return possible_words
 
-def calculate_information_gain(word, possible_words):
-    """Calculate the expected information gain of guessing a word."""
-    frequency = Counter()
-    for candidate in possible_words:
-        feedback = get_feedback(word, candidate)
-        frequency[feedback] += 1
-
+def calculate_information_gain(guess, possible_words):
+    """Calculate expected information gain from guessing a word."""
+    feedback_distribution = Counter()
+    
+    for answer in possible_words:
+        feedback = get_feedback(guess, answer)
+        feedback_distribution[feedback] += 1
+    
     total = len(possible_words)
     if total == 0:
         return 0
-
-    # Calculate expected information gain
-    return -sum((count / total) * math.log2(count / total) for count in frequency.values() if count > 0)
+    
+    # Calculate the expected information gain
+    information_gain = 0
+    for count in feedback_distribution.values():
+        probability = count / total
+        information_gain -= probability * math.log2(probability)
+    
+    return information_gain
 
 def get_next_guess(guess_history, evaluation_history):
     """Determine the next guess based on guess history and feedback."""
@@ -340,7 +346,6 @@ def wordle_game():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-    
 
 @app.route('/tourist', methods=['POST'])
 def tourist():
