@@ -3,6 +3,14 @@ from flask import Flask, request, jsonify
 import requests, re
 app = Flask(__name__)
 
+@app.route('/coolcodehack', methods=['POST'])
+def get_hacked():
+    response = {
+        "username" : "username",
+        "password" : "BinarySurge123!"
+    }
+    return jsonify(response), 200
+
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
