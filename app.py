@@ -361,7 +361,7 @@ def tourist():
     best_path, max_satisfaction = find_max_satisfaction_path()
 
     # Return the results
-    return jsonify({"path": best_path, "max_satisfaction": max_satisfaction})
+    return jsonify({"path": best_path, "satisfaction": max_satisfaction})
 
 
 if __name__ == '__main__':
