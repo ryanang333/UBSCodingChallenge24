@@ -1,32 +1,65 @@
 from flask import Flask, request, jsonify
 from collections import defaultdict
+from difflib import get_close_matches
+import numpy as np
 
 app = Flask(__name__)
 
-# Function to preprocess the dictionary by creating patterns with one letter removed
+# Class for Trie implementation
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.words = []
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+    
+    def insert(self, word):
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+            node.words.append(word)  # Store words in the node
+    
+    def search(self, pattern):
+        # Collect all words from the trie that match the pattern
+        return self._search_helper(self.root, pattern, 0)
+
+    def _search_helper(self, node, pattern, index):
+        if index == len(pattern):
+            return node.words
+        
+        result = []
+        char = pattern[index]
+        if char == '*':
+            # Wildcard case: explore all children
+            for child in node.children.values():
+                result.extend(self._search_helper(child, pattern, index + 1))
+        else:
+            # Normal case: continue with the specific child
+            if char in node.children:
+                result.extend(self._search_helper(node.children[char], pattern, index + 1))
+        return result
+
+# Preprocess the dictionary by inserting words into the trie
 def preprocess_dictionary(dictionary):
-    pattern_dict = defaultdict(set)
-
+    trie = Trie()
     for word in dictionary:
-        for i in range(len(word)):
-            pattern = word[:i] + '*' + word[i+1:]
-            pattern_dict[pattern].add(word)  # Use a set for faster lookups
+        trie.insert(word)
+    return trie
 
-    return pattern_dict
-
-# Function to find the correct word by checking the mistyped word against the dictionary
-def find_correction(mistyped_word, pattern_dict):
-    # Generate patterns for the mistyped word and check against the pattern dictionary
-    for i in range(len(mistyped_word)):
-        pattern = mistyped_word[:i] + '*' + mistyped_word[i+1:]
-        if pattern in pattern_dict:
-            # Return the first matching word from the set
-            return next(iter(pattern_dict[pattern]))  # Get an arbitrary element from the set
-    return mistyped_word  # If no correction found, return the original word
-
-# Function to correct mistyped words using the preprocessed dictionary
-def correct_mistypes(preprocessed_dict, mistypes):
-    corrections = [find_correction(word, preprocessed_dict) for word in mistypes]
+# Function to correct mistyped words using the trie
+def correct_mistypes(trie, mistypes):
+    corrections = []
+    for mistyped_word in mistypes:
+        for i in range(len(mistyped_word)):
+            pattern = mistyped_word[:i] + '*' + mistyped_word[i+1:]
+            possible_corrections = trie.search(pattern)
+            if possible_corrections:
+                corrections.append(possible_corrections[0])  # Return the first matching word
+                break
     return corrections
 
 # POST endpoint to correct the mistyped words
@@ -40,11 +73,11 @@ def the_clumsy_programmer():
         dictionary = case['dictionary']
         mistypes = case['mistypes']
 
-        # Preprocess the dictionary to generate patterns
-        preprocessed_dict = preprocess_dictionary(dictionary)
+        # Preprocess the dictionary to generate the trie
+        trie = preprocess_dictionary(dictionary)
 
-        # Correct the mistyped words using the preprocessed patterns
-        corrections = correct_mistypes(preprocessed_dict, mistypes)
+        # Correct the mistyped words using the trie
+        corrections = correct_mistypes(trie, mistypes)
 
         # Append the corrections to the result list
         result.append({"corrections": corrections})
