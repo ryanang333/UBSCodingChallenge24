@@ -1,5 +1,5 @@
 
-@app.route('/tourist')
+@app.route('/tourist', methods=['POST'])
 def tourist(input_dict, starting_point, time_limit):
     # Constants (subway lines, travel times)
     subway_stations = {
