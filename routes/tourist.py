@@ -1,3 +1,6 @@
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
 
 @app.route('/tourist', methods=['POST'])
 def tourist(input_dict, starting_point, time_limit):
@@ -93,6 +96,7 @@ def tourist(input_dict, starting_point, time_limit):
             "Kachidoki", "Shiodome", "Daimon", "Shiodome", "Tsukishima"
         ]
     }
+    
     travelling_time_betw_stations = {
         "Tokyo Metro Ginza Line": 2,
         "Tokyo Metro Marunouchi Line": 3,
@@ -117,7 +121,7 @@ def tourist(input_dict, starting_point, time_limit):
             break
     
     if starting_line is None:
-        return {"error": "Invalid starting point"}
+        return jsonify({"error": "Invalid starting point"})
     
     # All possible stations
     stations_list = subway_stations[starting_line]
@@ -156,8 +160,8 @@ def tourist(input_dict, starting_point, time_limit):
     # Step 3: Run pathfinding and determine the best path
     best_path, max_satisfaction = find_max_satisfaction_path()
     
-    # Step 4: Return the result
-    return {
-        "path": best_path,
-        "satisfaction": max_satisfaction
-    }
+    # Step 4: Return the result in JSON format
+    return jsonify({
+        "best_path": best_path,
+        "max_satisfaction": max_satisfaction
+    })
