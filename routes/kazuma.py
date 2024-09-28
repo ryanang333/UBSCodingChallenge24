@@ -14,26 +14,29 @@ def efficient_hunter_kazuma():
         if n == 0:
             results.append({"efficiency": 0})
             continue
-        
-        # Initialize variables for tracking efficiencies
-        prev_efficiency = 0  # Efficiency when skipping current monster
-        curr_efficiency = 0  # Efficiency when considering current monster
 
+        # DP array for maximum efficiencies
+        dp = [0] * (n + 1)
+
+        # Fill the dp array in reverse order
         for i in range(n - 1, -1, -1):
-            # Calculate potential efficiency if attacking the current monster
             attack_value = monsters[i]
             fee = monsters[i - 1] if i > 0 else 0
-            net_gain = max(0, attack_value - fee)
+            
+            # Calculate net gain only if there are previous monsters
+            if i == 0:
+                net_gain = attack_value  # No fee for the first monster
+            else:
+                net_gain = attack_value - fee
+            
+            # If attacking the current monster is beneficial
+            if net_gain > 0:
+                dp[i] = max(dp[i + 1], net_gain + (dp[i + 2] if i + 2 < n else 0))  # Attack and skip
+            else:
+                dp[i] = dp[i + 1]  # Skip attack if net gain is non-positive
 
-            # Update the current efficiency considering both attack and skip
-            next_efficiency = prev_efficiency if i + 1 < n else 0  # Previous step efficiency
-            curr_efficiency = max(net_gain + (prev_efficiency if i + 2 < n else 0), next_efficiency)
+        results.append({"efficiency": dp[0]})  # The maximum efficiency from the first monster
 
-            # Move to the next state
-            prev_efficiency, curr_efficiency = curr_efficiency, prev_efficiency
-
-        results.append({"efficiency": prev_efficiency})  # The maximum efficiency starting from the first monster
-    
     return jsonify(results)
 
 if __name__ == '__main__':
