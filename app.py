@@ -786,30 +786,25 @@ def efficient_hunter_kazuma():
             monsters = hunt["monsters"]
             n = len(monsters)
 
-            # Edge case: No monsters
-            if n == 0:
+            if n == 1:
                 results.append({"efficiency": 0})
                 continue
 
-            # DP array for tracking maximum efficiency
-            dp = [0] * (n + 1)  # n+1 to handle edge cases easily
+            # Initialize the DP array with size n
+            dp = [0] * n
 
-            for i in range(n):
-                # Update current state without action
-                dp[i + 1] = max(dp[i + 1], dp[i])  # Carry forward previous efficiency
+            # Base cases
+            dp[0] = 0  # No efficiency on the first step (since Kazuma rests initially)
+            dp[1] = max(0, monsters[1] - monsters[0])  # Efficiency after first attack, only if it yields positive
 
-                # Check if Kazuma can attack
-                if monsters[i] > 0:
-                    attack_earning = monsters[i] - 1  # Earnings after paying adventurers
+            # Fill the DP array using optimized logic
+            for i in range(2, n):
+                # Attack option: consider current attack and rest one step before, with a check on monster size
+                attack = max(0, monsters[i] - monsters[i - 1])
+                dp[i] = max(dp[i - 1], dp[i - 2] + attack)
 
-                    # If Kazuma attacks at time i, he cannot attack at i + 1
-                    if i + 1 < n:  # Only update if there is a next time
-                        dp[i + 2] = max(dp[i + 2], dp[i] + attack_earning)
-                    else:
-                        dp[i + 1] = max(dp[i + 1], dp[i] + attack_earning)
-
-            # Maximum efficiency found
-            results.append({"efficiency": max(dp)})
+            # Append the maximum efficiency result for this hunt
+            results.append({"efficiency": dp[n - 1]})
 
         return jsonify(results)
 
