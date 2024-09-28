@@ -110,7 +110,8 @@ def wordle_game():
             possible_words = evaluate_possible_words(guess_history, evaluation_history, word_list)
             if len(possible_words) == 0:
                 guess = "error"
-            guess = possible_words[0]
+            else:
+                guess = possible_words[0]
 
         response = {
             "guess": guess
