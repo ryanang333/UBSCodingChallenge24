@@ -71,8 +71,8 @@ def find_dodge_instructions(map_string):
 
     # Check possible moves and dodge bullets
     possible_moves = {
-        'u': (0, -1),
-        'd': (0, 1),
+        'u': (0, 1),
+        'd': (0, -1),
         'l': (-1, 0),
         'r': (1, 0)
     }
