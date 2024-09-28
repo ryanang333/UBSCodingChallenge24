@@ -5,9 +5,9 @@ app = Flask(__name__)
 @app.route('/tourist', methods=['POST'])
 def tourist():
     data = request.get_json()
-    input_dict = data.get('input_dict')
-    starting_point = data.get('starting_point')
-    time_limit = data.get('time_limit')
+    input_dict = data.get('locations')
+    starting_point = data.get('startingPoint')
+    time_limit = data.get('timeLimit')
 
     # Constants
     subway_stations = {
