@@ -16,27 +16,20 @@ def efficient_hunter_kazuma():
                 results.append({"efficiency": 0})
                 continue
 
-            efficiency = 0
-            fee = 0  # This will track the total fees paid to adventurers
-            i = 0
+            # Initialize the DP array
+            dp = [0] * n
 
-            while i < n:
-                if monsters[i] > 0:  # Only consider attacking if there are monsters
-                    # Calculate potential earnings
-                    current_earning = monsters[i] - fee
-                    if current_earning > 0:
-                        efficiency += current_earning  # Add to efficiency
-                    fee = monsters[i]  # Set fee to current monster count
+            # Base cases
+            dp[0] = 0  # No monsters, no efficiency
+            if monsters[0] > 0:
+                dp[1] = max(0, monsters[0] - 0)  # Only attack if there's something to defeat
 
-                    # If next monster count is less than or equal, we should skip cooldown
-                    if i + 1 < n and monsters[i + 1] <= monsters[i]:
-                        i += 1  # Move to next time frame directly
-                    else:
-                        i += 2  # Move to next time frame after cooldown
-                else:
-                    i += 1  # Move to next time frame if no monsters
+            # Fill the DP array
+            for i in range(1, n):
+                attack = max(0, monsters[i] - monsters[i - 1]) if i > 0 else monsters[i]
+                dp[i] = max(dp[i - 1], (dp[i - 2] + attack) if i > 1 else attack)
 
-            results.append({"efficiency": efficiency})
+            results.append({"efficiency": dp[n - 1]})
 
         return jsonify(results)
 
