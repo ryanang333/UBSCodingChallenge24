@@ -777,27 +777,23 @@ def the_clumsy_programmer():
 
 def efficient_hunter_kazuma(monsters):
     n = len(monsters)
-    
-    # If no monsters, no efficiency can be earned
     if n == 0:
         return {"efficiency": 0}
-    
-    # Initialize DP arrays for resting and attacking
-    dp_rest = [0] * (n + 1)
-    dp_attack = [0] * (n + 1)
-    
-    max_efficiency = 0  # Track the maximum efficiency
 
+    # Initialize DP table: dp[i][0] -> rest/prepare, dp[i][1] -> attack
+    dp = [[0] * 2 for _ in range(n + 1)]
+    
+    # Fill the DP table
     for i in range(1, n + 1):
-        # If Kazuma prepares at time i (rest state), he could have rested or attacked in the previous time
-        dp_rest[i] = max(dp_rest[i - 1], dp_attack[i - 1])
-
-        # If Kazuma attacks at time i, he must have prepared at time i-1
-        dp_attack[i] = dp_rest[i - 1] + monsters[i - 1] - 1  # 1 gold spent on adventurers
+        # Rest or Prepare at time i
+        dp[i][0] = max(dp[i-1][0], dp[i-1][1])
         
-        # Update the maximum efficiency inline
-        max_efficiency = max(max_efficiency, dp_rest[i], dp_attack[i])
-
+        # Attack at time i (only possible if prepared at time i-1)
+        dp[i][1] = dp[i-1][0] + monsters[i-1]
+    
+    # The final answer is the maximum efficiency at the last time step, either resting or attacking
+    max_efficiency = max(dp[n][0], dp[n][1])
+    
     return {"efficiency": max_efficiency}
 
 @app.route('/efficient-hunter-kazuma', methods=['POST'])
@@ -805,7 +801,6 @@ def efficient_hunter_kazuma_endpoint():
     data = request.get_json()
     results = [{"efficiency": efficient_hunter_kazuma(m["monsters"])["efficiency"]} for m in data]
     return jsonify(results)
-
 
     
 @app.route('/mailtime', methods=['POST'])
