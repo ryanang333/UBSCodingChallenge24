@@ -271,27 +271,31 @@ import math
 from collections import Counter
 def get_feedback(guess, answer):
     """Evaluate the guess against the answer and return feedback."""
-    feedback = []
-    for i, letter in enumerate(guess):
-        if letter == answer[i]:
-            feedback.append('O')  # Correct letter and position
-        elif letter in answer:
-            feedback.append('X')  # Correct letter but wrong position
-        else:
-            feedback.append('-')  # Incorrect letter
+    feedback = ['-'] * 5  # Initialize feedback list
+    answer_copy = list(answer)  # Copy of answer to track used letters
+
+    # First pass for correct positions
+    for i in range(5):
+        if guess[i] == answer[i]:
+            feedback[i] = 'O'  # Correct letter and position
+            answer_copy[i] = None  # Remove the letter from consideration
+
+    # Second pass for correct letters in wrong positions
+    for i in range(5):
+        if feedback[i] == '-' and guess[i] in answer_copy:
+            feedback[i] = 'X'  # Correct letter but wrong position
+            answer_copy[answer_copy.index(guess[i])] = None  # Remove the letter from consideration
+
     return ''.join(feedback)
 
 def filter_possible_words(guess, feedback, possible_words):
     """Filter the list of possible words based on the feedback from the guess."""
     for i, char in enumerate(feedback):
         if char == 'O':
-            # Keep words with the letter in the same position
             possible_words = [word for word in possible_words if word[i] == guess[i]]
         elif char == 'X':
-            # Keep words with the letter not in the same position
             possible_words = [word for word in possible_words if guess[i] in word and word[i] != guess[i]]
         elif char == '-':
-            # Remove words containing the letter
             possible_words = [word for word in possible_words if guess[i] not in word]
     return possible_words
 
@@ -301,23 +305,26 @@ def calculate_information_gain(word, possible_words):
     for candidate in possible_words:
         feedback = get_feedback(word, candidate)
         frequency[feedback] += 1
-    # Calculate expected information gain based on the distribution of outcomes
+
     total = len(possible_words)
+    if total == 0:
+        return 0
+
+    # Calculate expected information gain
     return -sum((count / total) * math.log2(count / total) for count in frequency.values() if count > 0)
 
 def get_next_guess(guess_history, evaluation_history):
     """Determine the next guess based on guess history and feedback."""
-    possible_words = set(WORD_LIST)
+    possible_words = WORD_LIST[:]
 
     # Filter possible words based on previous guesses and feedback
     for guess, feedback in zip(guess_history, evaluation_history):
         possible_words = filter_possible_words(guess, feedback, possible_words)
 
     if not possible_words:
-        # Fallback to a random guess if no possible words remain
-        return random.choice(WORD_LIST)
+        return random.choice(WORD_LIST)  # Random guess if no options
 
-    # Evaluate the potential guesses based on information gain
+    # Evaluate potential guesses based on information gain
     best_guess = max(possible_words, key=lambda word: calculate_information_gain(word, possible_words))
     return best_guess
 
@@ -334,7 +341,7 @@ def wordle_game():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-    
+
 
 @app.route('/tourist', methods=['POST'])
 def tourist():
