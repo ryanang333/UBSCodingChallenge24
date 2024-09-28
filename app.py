@@ -13,8 +13,7 @@ def klotski_route():
     if request.is_json:
         data = request.get_json()
         for el in data:
-            ans.append(klotski(el.board, el.moves))
-        klotski(data[0].board, data[0].moves)
+            ans.append(klotski(el['board'], el['moves']))
 
 def klotski(board, moves):
     #given a 5x4 box => can only slide vertically or horizontally
