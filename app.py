@@ -421,73 +421,73 @@ def tourist():
 
 
 
-@app.route('/digital-colony', methods=['POST'])
-def calc():
-    if request.is_json:
-        data = request.get_json()
-        ans = digital_colony(data)
+# @app.route('/digital-colony', methods=['POST'])
+# def calc():
+#     if request.is_json:
+#         data = request.get_json()
+#         ans = digital_colony(data)
         
-    return jsonify(ans), 200
+#     return jsonify(ans), 200
 
-# Calculate signature of a pair of digits
-def calculate_signature(x, y):
+# # Calculate signature of a pair of digits
+# def calculate_signature(x, y):
 
-    if x == y:
-        return 0
-    elif x > y:
-        return x - y
-    else:
-        return 10 - (y - x)
+#     if x == y:
+#         return 0
+#     elif x > y:
+#         return x - y
+#     else:
+#         return 10 - (y - x)
 
-# Generate the next generation of the colony
-def generate_new_colony(colony):
-    weight = sum(int(digit) for digit in colony)
-    new_colony = []
+# # Generate the next generation of the colony
+# def generate_new_colony(colony):
+#     weight = sum(int(digit) for digit in colony)
+#     new_colony = []
     
-    # Add the first digit
-    new_colony.append(colony[0])
+#     # Add the first digit
+#     new_colony.append(colony[0])
     
-    # For each pair of digits, calculate the new digit and grow the colony
-    for i in range(len(colony) - 1):
-        x = int(colony[i])
-        y = int(colony[i + 1])
-        signature = calculate_signature(x, y)
+#     # For each pair of digits, calculate the new digit and grow the colony
+#     for i in range(len(colony) - 1):
+#         x = int(colony[i])
+#         y = int(colony[i + 1])
+#         signature = calculate_signature(x, y)
         
-        # New digit is the last digit of (weight + signature)
-        new_digit = (weight + signature) % 10
+#         # New digit is the last digit of (weight + signature)
+#         new_digit = (weight + signature) % 10
         
-        # Append the new digit between the current pair
-        new_colony.append(str(new_digit))
-        new_colony.append(colony[i + 1])
+#         # Append the new digit between the current pair
+#         new_colony.append(str(new_digit))
+#         new_colony.append(colony[i + 1])
     
-    return ''.join(new_colony)
+#     return ''.join(new_colony)
 
-# Get the total weight of the colony after the specified number of generations
-def get_weight_after_generations(colony, generations):
-    current_colony = colony
+# # Get the total weight of the colony after the specified number of generations
+# def get_weight_after_generations(colony, generations):
+#     current_colony = colony
     
-    # Simulate colony growth for the given number of generations
-    for _ in range(generations):
-        current_colony = generate_new_colony(current_colony)
+#     # Simulate colony growth for the given number of generations
+#     for _ in range(generations):
+#         current_colony = generate_new_colony(current_colony)
     
-    # Calculate and return the total weight of the final colony
-    return sum(int(digit) for digit in current_colony)
+#     # Calculate and return the total weight of the final colony
+#     return sum(int(digit) for digit in current_colony)
 
 
-def digital_colony(data):
-    result = []
-    # Process each colony in the request
-    for item in data:
-        generations = item['generations']
-        colony = item['colony']
-        print(colony)
+# def digital_colony(data):
+#     result = []
+#     # Process each colony in the request
+#     for item in data:
+#         generations = item['generations']
+#         colony = item['colony']
+#         print(colony)
         
-        # Get the weight after specified generations
-        weight = get_weight_after_generations(colony, generations)
-        result.append(str(weight))
+#         # Get the weight after specified generations
+#         weight = get_weight_after_generations(colony, generations)
+#         result.append(str(weight))
     
-    # Return the result as a JSON array
-    return result
+#     # Return the result as a JSON array
+#     return result
 
 def max_bugs_fixed(bug_seq):
     # Sort bugs by their limits
@@ -654,6 +654,49 @@ def would_be_hit(new_x, new_y, bullets):
 
     return False
 
+def calculate_weight_and_new_colony(colony):
+    # Calculate the weight of the colony
+    weight = sum(int(digit) for digit in colony)
+    
+    # Calculate new colony digits based on the signatures
+    new_colony = []
+    for i in range(len(colony) - 1):
+        a = int(colony[i])
+        b = int(colony[i + 1])
+        
+        # Calculate signature
+        if a == b:
+            signature = 0
+        else:
+            signature = abs(a - b) if a > b else (10 - abs(a - b))
+        
+        # New digit to be added
+        new_digit = (weight + signature) % 10
+        new_colony.append(colony[i])
+        new_colony.append(str(new_digit))
+    
+    new_colony.append(colony[-1])  # add the last digit of the current colony
+    return ''.join(new_colony), weight
+
+def simulate_generations(colony, generations):
+    current_colony = colony
+    for _ in range(generations):
+        current_colony, _ = calculate_weight_and_new_colony(current_colony)
+    final_weight = sum(int(digit) for digit in current_colony)
+    return final_weight
+
+@app.route('/digital-colony', methods=['POST'])
+def digital_colony():
+    data = request.get_json()
+    results = []
+    
+    for entry in data:
+        generations = entry['generations']
+        colony = entry['colony']
+        weight_after_generations = simulate_generations(colony, generations)
+        results.append(str(weight_after_generations))
+    
+    return jsonify(results), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
