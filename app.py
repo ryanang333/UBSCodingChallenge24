@@ -23,7 +23,6 @@ def klotski_route():
 def klotski(board, moves):
     #given a 5x4 box => can only slide vertically or horizontally
     positionMap = board_to_map(board, 5, 4)
-    print('before positions: ', positionMap)
     for i in range(0, len(moves), 2):
         currMove = moves[i: i+2]
         currPosition = positionMap[currMove[0]]
@@ -47,7 +46,6 @@ def klotski(board, moves):
                 tup = currPosition[i]
                 coord = tuple([tup[0] - 1, tup[1]])
                 positionMap[currMove[0]][i] = coord         
-    print('after positions: ', positionMap)
     return map_to_board(positionMap, 5, 4)
 
 def board_to_map(board, rows, cols):
